@@ -16,7 +16,7 @@ CatCompr(meta, mod, x1, x2, method = "post.hoc")
 }
   \item{x2}{Comparison level of same categorical moderator.
 }
-  \item{method}{post.hoc assumes the comparison was not planned prior to conducting the meta analysis. A planned comparison assumes the researcher has planned to compare these levels of the categorical moderator a priori. Default is post.hoc. 
+  \item{method}{\code{post.hoc} assumes the comparison was not planned prior to conducting the meta analysis. The other option, \code{planned}, assumes the researcher planned to conduct the analysis a priori. Default is \code{post.hoc}. 
 }
 }
 \details{See page 280-288 in Cooper et al. (2009) for the computations used in this function.
@@ -28,7 +28,7 @@ CatCompr(meta, mod, x1, x2, method = "post.hoc")
 }
 \item{d}{ Mean difference between the two groups divided by its standard deviation.
 }
-\item{Var d}{Variance of d.
+\item{Var(d)}{Variance of d.
 }
 \item{LowerLimits}{ Lower 95\% confidence interval.
 }

@@ -2,7 +2,7 @@
 \alias{CatModGraph}
 \title{Categorical Moderator Graph
 }
-\description{ Outputs a detailed rich graphic boxplot from a fixed or random effects moderator analysis. 
+\description{ Outputs a detail rich graphic boxplot from a fixed or random effects moderator analysis. 
 }
 \usage{
 CatModGraph(meta, mod, method = "random", modname = NULL, title = NULL)
@@ -12,14 +12,14 @@ CatModGraph(meta, mod, method = "random", modname = NULL, title = NULL)
 }
   \item{mod}{ Categorical moderator variable used for analysis. 
 }
-  \item{method}{ Model used, either "random" or "fixed" effects. Default is "random". 
+  \item{method}{ Model used, either \code{"random"} or \code{"fixed"} effects model. Default is \code{"random"}. 
 }
   \item{modname}{ Name of moderator to appear on x-axis of plot. Default is NULL. 
 }
   \item{title}{ Plot title. Default is NULL. 
 }
 }
-\value{ Boxplot graph with median, mean (denoted by '+'), interquartile range, max, min, and outliers from a fixed or random effects categorical moderator analysis. Places jitter points (for each study) on the boxplots. The size of each point (representing a study in the analysis) are based on study weights where more precise studies are larger. The ggplot2 package outputs the rich graphics.
+\value{ Boxplot graph with median, mean (denoted by '+'), inter-quartile range, max, min, and outliers from a fixed or random effects categorical moderator analysis. Places jitter points (for each study) on the boxplots. The size of each point (representing a study in the analysis) are based on study weights where more precise studies are larger. The ggplot2 package outputs the rich graphics.
 }
 \references{ Cooper, H., Hedges, L.V., & Valentine, J.C. (2009). The handbook of research synthesis and meta-analysis (2nd edition). New York: Russell Sage Foundation. 
 }

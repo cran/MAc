@@ -11,11 +11,11 @@ MAreg2(reg)
   \item{reg}{ Weighted linear regression (saved as an object, see details below).
 }
 }
-\details{ Running this function requires the researcher to conduct a weighted linear regression and saving it as an object, e.g.:
+\details{ Running this function requires the researcher to conduct a weighted linear regression while saving it as an object, e.g.:
   
-reg <- lm(data$z ~ data$mod8 + data$mod1, weights= data$wi.tau).
+\code{reg <- lm(data$z ~ data$mod8 + data$mod1, weights= data$wi.tau)}
 
-The outcome variable is a Fishers z and the predictor moderators can be either continuous or categorical. Weight the regression by either the fixed or random effect weight (e.g., fixed equals data$wi and random equals data$wi.tau). See ComplData function to assist in reducing the dataset, if applicable. See page 289 and 290 in Cooper et al. (2009) for the computations used in this function.
+The outcome variable is a Fishers z and the predictor moderator(s) can be either continuous or categorical. Weight the regression by either the fixed or random effect weight (e.g., fixed equals \code{data$wi} and random equals \code{data$wi.tau}). See \code{ComplData} function to assist in reducing the dataset, if applicable. See page 289 and 290 in Cooper et al. (2009) for the computations used in this function.
 }
 \value{
 \item{Beta}{ Beta coefficient.
@@ -40,10 +40,13 @@ Maintainer: AC Del Re \email{acdelre@gmail.com}
 \seealso{
 \code{\link{MAreg1}},
 \code{\link{MAreg2}},
-\code{\link{MAregGraph}}
+\code{\link{MAregGraph}},
+\code{\link{ComplData}}
+
 }
 \examples{
 # Data Set III (Cooper et al., 2009; pp. 265 & 587)
+
 require(MAc)
 id<-rep(1:20)
 n<-c(10,20,13,22,28,12,12,36,19,12,36,75,33,121,37,14,40,16,14,20)

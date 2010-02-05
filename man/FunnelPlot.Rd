@@ -10,12 +10,12 @@ FunnelPlot(meta, method = "random", title = NULL)
 \arguments{
   \item{meta}{data.frame with r (correlation coefficients) and n (sample size) for each study.
 }
-  \item{method}{Plot Model used, either "random" or "fixed" effects. Default is "random".
+  \item{method}{Plot Model used is either \code{"random"} or \code{"fixed"} effects. Default is \code{"random"}.
 }
   \item{title}{Plot title. Default is NULL.
 }
 }
-\value{Funnel plot with omnibus effect size (fixed or random), point for each study where size of point is based on the study's precision (based primarily on sample size) and standard error lines drawn to assist in assessing for publication bias in the meta-analysis. The ggplot2 package outputs the rich graphics. 
+\value{Outputs a funnel plot with omnibus effect size (fixed or random), visual point for each study where size of point is based on the study's precision (based primarily on sample size) and predicted standard error lines drawn to assist in assessing for publication bias in the meta-analysis. The ggplot2 package outputs the rich graphics. 
 }
 \references{ Cooper, H., Hedges, L.V., & Valentine, J.C. (2009). The handbook of research synthesis and meta-analysis (2nd edition). New York: Russell Sage Foundation. 
 }

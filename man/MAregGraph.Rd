@@ -5,23 +5,24 @@
 \description{Outputs a scatterplot from a fixed or random effects meta regression (continuous and/or categorical). 
 }
 \usage{
-MAregGraph(meta, mod, method = "random", modname = NULL, title = NULL, ylim = c(0, 1))
+MAregGraph(meta, mod, method = "random", modname = NULL, 
+title = NULL, ylim = c(0, 1))
 }
 \arguments{
   \item{meta}{ data.frame with r (correlation coefficients) and n (sample size) for each study.
 }
   \item{mod}{ Moderator variable used for meta regression.  
 }
-  \item{method}{ Model used, either random or fixed effects. Default is random.
+  \item{method}{ Model used, either \code{random} or \code{fixed} effects. Default is \code{random}.
 }
   \item{modname}{Name of moderator to appear on x axis of plot. Default is NULL.
 }
   \item{title}{Plot title. Default is NULL.
 }
-  \item{ylim}{Limits of y axis with the first arguments minimal value and second maximum value. Default is c(0, 1).
+  \item{ylim}{Limits of y axis with the first argument for the minimum y value and the second for the maximum y value. Default is \code{c(0, 1)}.
 }
 }
-\value{ Scatterplot with fixed or random effects regression line where size of points are based on study weights, where the more precise studies are larger. The ggplot2 package outputs the rich graphics.
+\value{ Scatterplot with fixed or random effects regression line with size of visual points based on study weights, where the more precise studies are larger. The ggplot2 package outputs the rich graphics.
 }
 \references{ Cooper, H., Hedges, L.V., & Valentine, J.C. (2009). The handbook of research synthesis and meta analysis (2nd edition). New York: Russell Sage Foundation. 
 }

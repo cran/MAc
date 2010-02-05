@@ -10,7 +10,7 @@
 
 require('ggplot2')
 require('plyr')
-require('psych') 
+#require('psych') 
 
 ##=== Preliminary Steps ===##
 
@@ -522,7 +522,7 @@ CatModr <-  function(meta,  mod) {
 
 # Intermediate function for random effects Q-statistic test
 
-qr <- function(meta,  mod) {
+qrs <- function(meta,  mod) {
   mod.sig <- mod_sig.zR(meta, mod)
   mod.sig$ES <- (exp(2*mod.sig$ES)-1)/(exp(2*mod.sig$ES) + 1)
   mod.sig$Var <- (exp(2*mod.sig$Var)-1)/(exp(2*mod.sig$Var) + 1)
@@ -556,7 +556,7 @@ CatModrQ <-  function(meta,  mod) {
   # Returns:
   #   Random effects moderator Q-statistic, Q-within & between, df(Qw & Qb), and 
   #   homogeneity p-value within & between levels.
-  mod.sig <- qr(meta, mod)
+  mod.sig <- qrs(meta, mod)
   k <- mod.sig$K[mod.sig$Mod=="Overall"]                         #number of studies
   levels <- length(mod.sig$Mod)-1
   Qb.df <- levels-1 
@@ -588,7 +588,7 @@ CatCompr <- function(meta,  mod, x1, x2,  method= "post.hoc") {
   # Returns:
   #   Random effects moderator means per group, mean difference (d), variance of difference,
   #   p-value, and 95% confidence intervals. 
-  modsig <- qr(meta, mod)
+  modsig <- qrs(meta, mod)
   com1 <- levels(modsig$Mod)[x1]  # first level of moderator
   com2 <- levels(modsig$Mod)[x2]  # second level of moderator
   x1.es <- modsig[modsig$Mod==com1, "ES"]
@@ -1169,4 +1169,75 @@ ComplData <- function(meta, mod1,  mod2=NULL, mod3=NULL, mod4=NULL, mod5=NULL,
   return(meta)
 }
          
+##====== Multivariate Moderator Graphs ======##
+
+
+MultiModGraph <- function(meta, conmod,  catmod, method="random",  
+                          conmod.name=NULL,  title=NULL) {
+  # Outputs a scatterplot and boxplot faceted by the categorical moderator from a 
+  # fixed or random effects moderator analysis. Computations derived from chapter 
+  # 14 and 15, Cooper et al. (2009). 
+  # Args:
+  #   meta: data.frame with r (correlation coefficients) and n (sample size)for each study.
+  #   conmod: Continuous moderator variable used for analysis.
+  #   catmod: Categorical moderator variable used for analysis.    
+  #   method: Model used, either "random" or "fixed" effects. Default is "random".
+  #   conmod.name: Name of continuous moderator variable to appear on x-axis of plot. 
+  #   Default is NULL.
+  #   title: Plot title. Default is NULL.
+  # Returns:
+  #   Multivariate moderator scatterplot graph faceted by categorical moderator levels. Also
+  #   places a weighted regression line based on either a fixed or random effects analysis. 
+  #   The ggplot2 packages outputs the rich graphics.  
+  m <- meta
+  m$conmod <- conmod
+  m$catmod <- catmod
+  compl <- !is.na(m$conmod)& !is.na(m$catmod)
+  m <- m[compl, ]
+  meta <- ddply(m,  .(id),  summarize,  r = aggrs(r), n=mean(n), 
+                catmod = sample(catmod,  1), conmod = head(conmod,  1) ) 
+  meta$z  <-  0.5*log((1 + meta$r)/(1-meta$r))   
+  meta$var.z <- 1/(meta$n-3)
+  meta$wi <-  1/meta$var.z
+  meta$wiTi <- meta$wi*meta$z
+  meta$wiTi2 <- meta$wi*(meta$z)^2
+  meta$k <- length(meta$mod)
+  mod <- meta$mod
+  sum.wi <- sum(meta$wi, na.rm=TRUE)    
+  sum.wi2 <- sum(meta$wi2, na.rm=TRUE)
+  sum.wiTi <- sum(meta$wiTi, na.rm=TRUE)    
+  sum.wiTi2 <- sum(meta$wiTi2, na.rm=TRUE)
+  comp <- sum.wi-sum.wi2/sum.wi
+  Q <- sum.wiTi2-(sum.wiTi^2)/sum.wi                         
+  k <- sum(!is.na(meta$r))                                  
+  df <- k-1      
+  tau <- (Q-k + 1)/comp 				
+  meta$var.tau <- meta$var.z + tau
+  meta$wi.tau <- 1/meta$var.tau
+  meta$wiTi.tau <- meta$wi.tau*meta$z
+  meta$wiTi2.tau <- meta$wi.tau*(meta$z)^2
+  if(method=="fixed") {
+    multimod <- ggplot(meta, aes(conmod, z, weight=wi), na.rm=TRUE) + 
+                       opts(title=title, legend.position="none", na.rm=TRUE) + 
+                       facet_wrap(~catmod)  + 
+                       geom_point( aes(size=wi, shape=catmod)) + 
+                       geom_smooth(aes(group=1, weight=wi),
+                                   method= lm, se=FALSE, na.rm=TRUE) +
+                       ylab("Effect Size") + 
+                       xlab(conmod.name)
+  }  
+  if(method=="random") {
+    multimod <- ggplot(meta, aes(conmod, z, weight=wi.tau), na.rm=TRUE) + 
+                              opts(title=title, legend.position="none", na.rm=TRUE) + 
+                              facet_wrap(~catmod)  + 
+                              geom_point(aes(size=wi.tau, shape=catmod)) + 
+                              geom_smooth(aes(group=1, weight=wi.tau), 
+                                          method = lm, se = FALSE,  na.rm=TRUE) + 
+                              ylab("Effect Size") + 
+                              xlab(conmod.name)
+  }
+  return(multimod)
+}
+
+
 

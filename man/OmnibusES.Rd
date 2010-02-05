@@ -10,7 +10,7 @@ OmnibusES(meta, var = "weighted")
 \arguments{
   \item{meta}{data.frame with r (correlation coefficients) and n (sample size) for each study.
 }
-  \item{var}{"weighted" or "unweighted". Default is "weighted". Use the unweighted variance method only if Q is rejected and is very large relative to k. 
+  \item{var}{\code{"weighted"} or \code{"unweighted"}. Default is \code{"weighted"}. Use the unweighted variance method only if Q is rejected and is very large relative to k. 
 }
 }
 \value{
@@ -22,7 +22,7 @@ Fixed and random effects:
 }
 \item{Var(ES)}{ Variance of Omnibus effect size.
 }
-\item{StdError}{ Sqrt of variance.
+\item{StdError}{ Square root of variance.
 }
 \item{LowerLimit}{ Lower 95\% confidence interval.
 }

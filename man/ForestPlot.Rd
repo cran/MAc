@@ -9,7 +9,7 @@ ForestPlot(meta, method = "random", title = NULL)
 \arguments{
   \item{meta}{data.frame with r (correlation coefficients) and n (sample size) for each study.
 }
-  \item{method}{Model used, either "random" or "fixed" effects. Default is "random".
+  \item{method}{Model used, either \code{"random"} or \code{"fixed"} effects. Default is \code{"random"}.
 }
   \item{title}{Plot title. Default is NULL.
 }

@@ -12,7 +12,7 @@ MAreg1(meta, mod, method = "random")
 }
   \item{mod}{ Moderator variable used for meta-regression.  
 }
-  \item{method}{ Model used, either random or fixed effects. Default is random.
+  \item{method}{ Model used, either \code{random} or \code{fixed effects}. Default is \code{random}.
 }
 }
 \details{See page 289-290 in Cooper et al. (2009) for the computations used in this function.
@@ -20,7 +20,7 @@ MAreg1(meta, mod, method = "random")
 \value{
 \item{Beta}{ Beta coefficient.
 } 
-\item{StdError}{ Standard Error of coefficient (adjusted value).
+\item{StdError}{ Standard Error of beta coefficient (adjusted StdError value).
 }
 \item{Tvalue}{ T-value (adjusted value).
 }

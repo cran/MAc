@@ -5,7 +5,8 @@
 \description{ Function to reduce data set with complete data for x number of predictors in a multivariate moderator analysis. Will accept a data.frame with multiple rows per study and reduce the data.frame to one effect size per study based on recommended aggregation procedures for correlations (see chapter 10, Hunter & Schmidt, 2004; pp. 435-8).
 }
 \usage{
-ComplData(meta, mod1, mod2 = NULL, mod3 = NULL, mod4 = NULL, mod5 = NULL, predictors = 1)
+ComplData(meta, mod1, mod2 = NULL, mod3 = NULL, mod4 = NULL,
+ mod5 = NULL, predictors = 1)
 }
 \arguments{
   \item{meta}{ data.frame with r (correlation coefficients) and n (sample size) for each study.

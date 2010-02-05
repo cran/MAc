@@ -30,7 +30,7 @@ Fixed effects moderator:
 }
 \item{df(Qb)}{ Degrees of freedom for Q-between.
 }
-\item{P-value(between}{ Q-between p-value (for homogeneity)
+\item{P-value(between)}{ Q-between p-value (for homogeneity)
 } 
 }
 \references{ Cooper, H., Hedges, L.V., & Valentine, J.C. (2009). The handbook of research synthesis and meta-analysis (2nd edition). New York: Russell Sage Foundation. 

@@ -11,7 +11,7 @@ MetaR(meta)
 \arguments{
   \item{meta}{data.frame with r (correlation coefficients) and n (sample size) for each study.}
 }
-\value{Outputs a data.frame with aggregated effect sizes where each study is reduced to one row per study by a weighted average formula. This formula is based on Hunter and Schmidts (2004) approach to aggregation of dependent correlation effect sizes (see chapter 10, pp. 435-8). Further, this function will add all necessary weights to each study in order to conduct all appropriate analyses. These weights are derived from a statistical transformation of each r (correlation coefficient) to a Fishers z transformation (see chapter 14, Cooper et al., 2009).
+\value{Outputs a data.frame with aggregated effect sizes where each study is reduced to one row per study by a weighted average formula. This formula is based on Hunter and Schmidts (2004) approach to aggregation of dependent effect sizes for correlations (see chapter 10, pp. 435-8). Further, this function will add all necessary weights to each study in order to conduct all appropriate analyses. These weights are derived from a statistical transformation of each r (correlation coefficient) to a Fishers z (see chapter 14, Cooper et al., 2009).
 }
 \references{ Cooper, H., Hedges, L.V., & Valentine, J.C. (2009). The handbook of research synthesis and meta-analysis (2nd edition). New York: Russell Sage Foundation. 
 }
