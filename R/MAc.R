@@ -1239,5 +1239,50 @@ MultiModGraph <- function(meta, conmod,  catmod, method="random",
   return(multimod)
 }
 
+Rho_TU<- function(r,xx,yy) {
+  r.corrected<-r/(sqrt(xx)*sqrt(yy))
+  return(r.corrected)
+   }
 
+CorAtten <- function(meta, xx, yy) {
+  # Used to correct for attenuated effect sizes due to measurement unreliability.
+  # Args:
+  #   meta: data.frame with r (correlation coefficients) and n (sample size)for each study.
+  #   xx: Column for reliability of predictor variable ("independent variable").  
+  #   yy: Column for reliability of outcome variable ("dependent variable").
+  # Returns:
+  # data.frame with a new column for correlations corrected for measurement
+  # unreliability, updated standard errors, variance, and study weights based on these
+  # corrected values (see Hunter & Schmidt, 2004; pp. 97-98). Studys without reliability 
+  # information will remain unchanged, as will their standard errors, variances and weights.
+  m <- meta
+  meta$xx <- xx
+  meta$yy <- yy
+  # Rho_TU is the correction function (internal MAc function) 
+  meta$r.adj <- ifelse(is.na(meta$xx &meta$yy),meta$r, Rho_TU(meta$r, meta$xx, meta$yy)) 
+  meta$z  <-  0.5*log((1 + meta$r.adj)/(1-meta$r.adj))  
+  meta$var.r <- ((1-meta$r.adj^2)^2)/(meta$n-1) 
+  meta$var.r2 <- ifelse(is.na(m$xx &m$yy), meta$var.r, meta$var.r/(xx*yy) ) # corrected var 
+  meta$var.z <- 1/(meta$n-3) # Is there a formula to transform to z based on var.r? In this format the above var.r for corrected r is erased. talk with hoyt!
+  meta$wi <-  1/meta$var.z
+  meta$wiTi <- meta$wi*meta$z
+  meta$wiTi2 <- meta$wi*(meta$z)^2
+  meta$k <- length(meta$mod)
+  mod <- meta$mod
+  sum.wi <- sum(meta$wi, na.rm=TRUE)    
+  sum.wi2 <- sum(meta$wi2, na.rm=TRUE)
+  sum.wiTi <- sum(meta$wiTi, na.rm=TRUE)    
+  sum.wiTi2 <- sum(meta$wiTi2, na.rm=TRUE)
+  comp <- sum.wi-sum.wi2/sum.wi
+  Q <- sum.wiTi2-(sum.wiTi^2)/sum.wi                         
+  k <- sum(!is.na(meta$r))                                  
+  df <- k-1      
+  tau <- (Q-k + 1)/comp 				
+  meta$var.tau <- meta$var.z + tau
+  meta$wi.tau <- 1/meta$var.tau
+  meta$wiTi.tau <- meta$wi.tau*meta$z
+  meta$wiTi2.tau <- meta$wi.tau*(meta$z)^2
+  return(meta)
+}
+ 
 

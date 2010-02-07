@@ -1,8 +1,9 @@
 \name{r_from_t}
 \alias{r_from_t}
-\title{Correlation from T-test
+\title{Correlation from t-test
 }
-\description{Compute correlation from t-value reported in the primary study}
+\description{Compute correlation from t-value reported in the primary study (see section 12.5.4, Borenstein, 2009; pp. 234).
+}
 \usage{
 r_from_t(t, n)
 }
@@ -14,7 +15,7 @@ r_from_t(t, n)
 }
 \value{Outputs the correlation coefficient (r).
 }
-\references{ Cooper, H., Hedges, L.V., & Valentine, J.C. (2009). The handbook of research synthesis and meta-analysis (2nd edition). New York: Russell Sage Foundation. 
+\references{Borenstein (2009). Effect sizes for continuous data. In H. Cooper, L. V. Hedges, & J. C. Valentine (Eds.), \emph{The handbook of research synthesis and meta analysis} (pp. 279-293). New York: Russell Sage Foundation.
 }
 \author{ AC Del Re & William T. Hoyt
 

@@ -2,18 +2,18 @@
 \alias{CatModfQ}
 \title{Categorical Moderator Q-statisic (Fixed Effects) 
 }
-\description{Q test for homogeneity between levels of specified moderator variable.
+\description{Q test to assess for homogeneity between levels of specified moderator variable.
 }
 \usage{
 CatModfQ(meta, mod)
 }
 \arguments{
-  \item{meta}{ data.frame with r (correlation coefficients) and n (sample size) for each study.
+  \item{meta}{ \code{data.frame} with r (correlation coefficients) and n (sample size) for each study.
 }
   \item{mod}{ Categorical moderator variable used for moderator analysis.
 }
 }
-\details{See page 280-288 in Cooper et al. (2009) for the computations used in this function.
+\details{See Konstantopoulos & Hedges (2009; pp. 280-288) for the computations used in this function.
 }
 \value{ 
 Fixed effects moderator:
@@ -33,7 +33,9 @@ Fixed effects moderator:
 \item{P-value(between)}{ Q-between p-value (for homogeneity)
 } 
 }
-\references{ Cooper, H., Hedges, L.V., & Valentine, J.C. (2009). The handbook of research synthesis and meta-analysis (2nd edition). New York: Russell Sage Foundation. 
+\references{Konstantopoulos & Hedges (2009). Analyzing effect sizes: Fixed-effects models. In H. Cooper, L. V. Hedges, & J. C. Valentine (Eds.), \emph{The handbook of research synthesis and meta analysis} (pp. 279-293). New York: Russell Sage Foundation.  
+
+Shadish & Haddock (2009). Combining estimates of effect size. In H. Cooper, L. V. Hedges, & J. C. Valentine (Eds.), \emph{The handbook of research synthesis and meta analysis} (pp. 257-278). New York: Russell Sage Foundation. 
 }
 \author{AC Del Re & William T. Hoyt
 

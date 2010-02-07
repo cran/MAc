@@ -2,20 +2,20 @@
 \alias{MAreg1}
 \title{ Meta-Regression (Single Predictor Model)
 }
-\description{ Meta-regression function for a single predictor model. This function corrects for inaccuracies with the standard errors produced in an OLS regression model (see Cooper et al., 2009; pp. 289-290).
+\description{ Meta-regression function for a single predictor model. This function corrects for inaccuracies in the standard errors produced from an OLS regression model (Konstantopoulos & Hedges, 2009; pp. 289-290).
 }
 \usage{
 MAreg1(meta, mod, method = "random")
 }
 \arguments{
-  \item{meta}{ data.frame with r (correlation coefficients) and n (sample size) for each study.
+  \item{meta}{ \code{data.frame} with r (correlation coefficients) and n (sample size) for each study.
 }
   \item{mod}{ Moderator variable used for meta-regression.  
 }
   \item{method}{ Model used, either \code{random} or \code{fixed effects}. Default is \code{random}.
 }
 }
-\details{See page 289-290 in Cooper et al. (2009) for the computations used in this function.
+\details{See Konstantopoulos & Hedges (2009; pp. 289-290) for the computations used in this function.
 }
 \value{
 \item{Beta}{ Beta coefficient.
@@ -31,7 +31,7 @@ MAreg1(meta, mod, method = "random")
 \item{P-value}{ Significance level.
 }
 }
-\references{ Cooper, H., Hedges, L.V., & Valentine, J.C. (2009). The handbook of research synthesis and meta-analysis (2nd edition). New York: Russell Sage Foundation. 
+\references{Konstantopoulos & Hedges (2009). Analyzing effect sizes: Fixed-effects models. In H. Cooper, L. V. Hedges, & J. C. Valentine (Eds.), \emph{The handbook of research synthesis and meta analysis} (pp. 279-293). New York: Russell Sage Foundation.  
 }
 \author{AC Del Re & William T. Hoyt
 

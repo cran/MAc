@@ -2,21 +2,22 @@
 \alias{ForestPlot}
 \title{Forest Plot
 }
-\description{Forest plot for meta-analysis}
+\description{Forest plot for meta-analysis.
+}
 \usage{
 ForestPlot(meta, method = "random", title = NULL)
 }
 \arguments{
-  \item{meta}{data.frame with r (correlation coefficients) and n (sample size) for each study.
+  \item{meta}{\code{data.frame} with r (correlation coefficients) and n (sample size) for each study.
 }
-  \item{method}{Model used, either \code{"random"} or \code{"fixed"} effects. Default is \code{"random"}.
+  \item{method}{Model used, either \code{random} or \code{fixed} effects. Default is \code{random}.
 }
   \item{title}{Plot title. Default is NULL.
 }
 }
 \value{Forest plot with omnibus effect size (fixed or random), point for each study where size of point is based on the study's precision (based primarily on sample size) and 95\% confidence intervals. The ggplot2 package outputs the rich graphics.  
 }
-\references{ Cooper, H., Hedges, L.V., & Valentine, J.C. (2009). The handbook of research synthesis and meta-analysis (2nd edition). New York: Russell Sage Foundation. 
+\references{ Cooper, H., Hedges, L.V., & Valentine, J.C. (2009). \emph{The handbook of research synthesis and meta-analysis} (2nd edition). New York: Russell Sage Foundation. 
 }
 \author{AC Del Re & William T. Hoyt
 

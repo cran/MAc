@@ -2,7 +2,7 @@
 \alias{CatModr}
 \title{Categorical Moderator Analysis (Random Effects) 
 }
-\description{Computes single predictor categorical moderator analysis.
+\description{Computes a single predictor categorical moderator analysis.
 }
 \usage{
 CatModr(meta, mod)

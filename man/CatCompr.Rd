@@ -8,7 +8,7 @@
 CatCompr(meta, mod, x1, x2, method = "post.hoc")
 }
 \arguments{
-  \item{meta}{data.frame with correlation coefficients and sample size for each study.
+  \item{meta}{\code{data.frame} with correlation coefficients and sample size for each study.
 }
   \item{mod}{Categorical moderator variable used for moderator analysis.
 }
@@ -16,10 +16,10 @@ CatCompr(meta, mod, x1, x2, method = "post.hoc")
 }
   \item{x2}{Comparison level of same categorical moderator.
 }
-  \item{method}{\code{post.hoc} assumes the comparison was not planned prior to conducting the meta analysis. The other option, \code{planned}, assumes the researcher planned to conduct the analysis a priori. Default is \code{post.hoc}. 
+  \item{method}{\code{post.hoc} assumes the comparison was not planned prior to conducting the meta analysis. The other option, \code{planned}, assumes the researcher planned to conduct the analysis a priori. Default is \code{post.hoc} using the Scheffe statistical method. 
 }
 }
-\details{See page 280-288 in Cooper et al. (2009) for the computations used in this function.
+\details{See Konstantopoulos & Hedges (2009; pp. 280-288) for the computations used in this function.
 }
 \value{
 \item{Mean1}{Mean effect size of the first level of the moderator. compared.
@@ -28,14 +28,14 @@ CatCompr(meta, mod, x1, x2, method = "post.hoc")
 }
 \item{d}{ Mean difference between the two groups divided by its standard deviation.
 }
-\item{Var(d)}{Variance of d.
+\item{Var(d)}{Variance of d (mean difference statistic).
 }
 \item{LowerLimits}{ Lower 95\% confidence interval.
 }
 \item{UpperLimits}{ Upper 95\% confidence interval.
 }
 }
-\references{ Cooper, H., Hedges, L.V., & Valentine, J.C. (2009). The handbook of research synthesis and meta analysis (2nd edition). New York Russell Sage Foundation.
+\references{ Konstantopoulos & Hedges (2009). Analyzing effect sizes: Fixed-effects models. In H. Cooper, L. V. Hedges, & J. C. Valentine (Eds.), \emph{The handbook of research synthesis and meta analysis} (pp. 279-293). New York: Russell Sage Foundation. 
 } 
 \author{AC Del Re & William T. Hoyt
 

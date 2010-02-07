@@ -8,15 +8,15 @@
 OmnibusES(meta, var = "weighted")
 }
 \arguments{
-  \item{meta}{data.frame with r (correlation coefficients) and n (sample size) for each study.
+  \item{meta}{\code{data.frame} with r (correlation coefficients) and n (sample size) for each study.
 }
-  \item{var}{\code{"weighted"} or \code{"unweighted"}. Default is \code{"weighted"}. Use the unweighted variance method only if Q is rejected and is very large relative to k. 
+  \item{var}{\code{weighted} or \code{unweighted}. Default is \code{weighted}. Use the \code{unweighted} variance method only if Q is rejected and is very large relative to the number of studies in the meta-analysis. 
 }
 }
 \value{
 Fixed and random effects:
  
-\item{K}{ Number of studies for each level of the moderator.
+\item{K}{ Number of studies in the meta-analysis.
 }
 \item{ES}{ Overall Omnibus effect size for the meta-analysis.
 }
@@ -38,10 +38,10 @@ Fixed and random effects:
 }
 \item{P-hetero}{ Q-statistic p-value (assesses overall heterogeneity between studies).
 }
-\item{I-squared}{ Proportion of total variation in effect size that is due to heterogeneity rather than chance (see Cooper, et al., 2009; pp. 263).
+\item{I-squared}{ Proportion of total variation in effect size that is due to heterogeneity rather than chance (see Shadish & Haddock, 2009; pp. 263).
 }
 }
-\references{ Cooper, H., Hedges, L.V., & Valentine, J.C. (2009). The handbook of research synthesis and meta-analysis (2nd edition). New York: Russell Sage Foundation. 
+\references{ Shadish & Haddock (2009). Analyzing effect sizes: Fixed-effects models. In H. Cooper, L. V. Hedges, & J. C. Valentine (Eds.), \emph{The handbook of research synthesis and meta analysis} (pp. 257-278). New York: Russell Sage Foundation. 
 }
 \author{AC Del Re & William T. Hoyt
 

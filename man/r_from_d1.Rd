@@ -2,7 +2,7 @@
 \alias{r_from_d1}
 \title{Correlation from Mean Difference II
 }
-\description{Converts d (mean difference) reported in primary study to r (correlation coefficient) where sample size of the treatment group  is not equal to the sample size of the comparison group (see section 12.5.4, Cooper et al., 2009; pp. 234)
+\description{Converts d (mean difference) reported in primary study to r (correlation coefficient) where sample size of the treatment group  is not equal to the sample size of the comparison group (see section 12.5.4, Borenstein, 2009; pp. 234).
 }
 \usage{
 r_from_d1(d, n.1, n.2, var.d)
@@ -18,7 +18,7 @@ r_from_d1(d, n.1, n.2, var.d)
 }
 }
 \value{ Computes a correlation coefficient (r)}
-\references{ Cooper, H., Hedges, L.V., & Valentine, J.C. (2009). The handbook of research synthesis and meta-analysis (2nd edition). New York: Russell Sage Foundation. 
+\references{Borenstein (2009). Effect sizes for continuous data. In H. Cooper, L. V. Hedges, & J. C. Valentine (Eds.), \emph{The handbook of research synthesis and meta analysis} (pp. 279-293). New York: Russell Sage Foundation.
 }
 \author{ AC Del Re & William T. Hoyt
 

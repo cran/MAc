@@ -9,7 +9,7 @@ MAregGraph(meta, mod, method = "random", modname = NULL,
 title = NULL, ylim = c(0, 1))
 }
 \arguments{
-  \item{meta}{ data.frame with r (correlation coefficients) and n (sample size) for each study.
+  \item{meta}{ \code{data.frame} with r (correlation coefficients) and n (sample size) for each study.
 }
   \item{mod}{ Moderator variable used for meta regression.  
 }
@@ -19,12 +19,12 @@ title = NULL, ylim = c(0, 1))
 }
   \item{title}{Plot title. Default is NULL.
 }
-  \item{ylim}{Limits of y axis with the first argument for the minimum y value and the second for the maximum y value. Default is \code{c(0, 1)}.
+  \item{ylim}{Limits of y-axis with the first argument for the minimum y-value and the second for the maximum y value. Default is \code{c(0, 1)}.
 }
 }
 \value{ Scatterplot with fixed or random effects regression line with size of visual points based on study weights, where the more precise studies are larger. The ggplot2 package outputs the rich graphics.
 }
-\references{ Cooper, H., Hedges, L.V., & Valentine, J.C. (2009). The handbook of research synthesis and meta analysis (2nd edition). New York: Russell Sage Foundation. 
+\references{ Cooper, H., Hedges, L.V., & Valentine, J.C. (2009). \emph{The handbook of research synthesis and meta analysis} (2nd edition). New York: Russell Sage Foundation. 
 }
 \author{AC Del Re & William T. Hoyt
 

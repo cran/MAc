@@ -15,14 +15,14 @@ MAreg2(reg)
   
 \code{reg <- lm(data$z ~ data$mod8 + data$mod1, weights= data$wi.tau)}
 
-The outcome variable is a Fishers z and the predictor moderator(s) can be either continuous or categorical. Weight the regression by either the fixed or random effect weight (e.g., fixed equals \code{data$wi} and random equals \code{data$wi.tau}). See \code{ComplData} function to assist in reducing the dataset, if applicable. See page 289 and 290 in Cooper et al. (2009) for the computations used in this function.
+The outcome variable is a Fishers z and the predictor moderator(s) can be either continuous or categorical. Weight the regression by either the fixed or random effect weight (e.g., fixed equals \code{data$wi} and random equals \code{data$wi.tau}). See \code{ComplData} function to assist in reducing the dataset, if applicable. See Konstantopoulos & Hedges (2009; pp. 289-290) for the computations used in this function.
 }
 \value{
 \item{Beta}{ Beta coefficient.
 } 
 \item{StdError}{ Standard Error of coefficient (adjusted value).
 }
-\item{Tvalue}{ T value (adjusted value).
+\item{Tvalue}{ T-value (adjusted value).
 }
 \item{LowerLimit}{ Lower 95\% confidence interval.
 }
@@ -31,7 +31,7 @@ The outcome variable is a Fishers z and the predictor moderator(s) can be either
 \item{P-value}{ Significance level.
 }
 }
-\references{ Cooper, H., Hedges, L.V., & Valentine, J.C. (2009). The handbook of research synthesis and meta analysis (2nd edition). New York: Russell Sage Foundation. 
+\references{Konstantopoulos & Hedges (2009). Analyzing effect sizes: Fixed-effects models. In H. Cooper, L. V. Hedges, & J. C. Valentine (Eds.), \emph{The handbook of research synthesis and meta analysis} (pp. 279-293). New York: Russell Sage Foundation.  
 }
 \author{AC Del Re & William T. Hoyt
 

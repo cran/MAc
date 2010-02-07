@@ -4,46 +4,48 @@
 \docType{package}
 \title{Meta-Analysis for Correlations
 }
-\description{ This package contains all the relevant functions to conduct a correlational meta-analysis using recommended procedures as described in Cooper, Hedges, and Valentines Handbook of Research Synthesis and Meta-Analysis (2009). The goal in creating this package was to provide a variety of user-friendly functions to assist researchers from the initial to final stages of conducting a research synthesis. The meta-analyst can begin their project by using functions in this package to transform reported statistics from primary studies into correlation coefficients. Next, the analyst can aggregate all within-study effect sizes based on recommended procedures (see Hunter & Schmidt, 2004), calculate omnibus effect sizes under a fixed and random effects model, and assess for significant moderators (categorical and continuous, single and multi-predictor models) in the dataset. Finally, the meta-analyst can use one of several user-friendly graphics functions to visually represent their data in an elegant manner. 
+\description{ This package contains all the relevant functions to conduct a correlational meta-analysis using recommended procedures as described in \emph{The Handbook of Research Synthesis and Meta-Analysis} (Cooper,Hedges, and Valentine, 2009). The goal in creating this package was to provide a variety of user-friendly functions to assist researchers in the process of conducting a meta-analysis, from the initial to final stages of their analytic endeavor. The meta-analyst can begin their project by using \code{MAc} functions to derive correlation coefficents from the primary studies, when statistics other than correlations are reported (e.g., t-test, p-value, or Cohen's d). Then, the analyst can aggregate all within-study effect sizes (while accounting for within-study dependencies) based on recommended procedures by Hunter & Schmidt (2004), calculate omnibus effect sizes under a fixed and random effects model, and assess for significant moderators (categorical and continuous, single and multi-predictor models) in the dataset. Finally, the meta-analyst can use one of several user-friendly graphics functions to visually represent their data in an elegant manner. 
 }
 \details{
 \tabular{ll}{
 Package: \tab MAc\cr
 Type: \tab Package\cr
-Version: \tab 1.0\cr
-Date: \tab 2010-02-02\cr
+Version: \tab 1.0.2\cr
+Date: \tab 2010-02-07\cr
 License: \tab GPL-2\cr
 LazyLoad: \tab yes\cr
 }
-This package has integrated functions to facilitate the meta-analytic process (for correlations) at every analytical stage. There are five broad areas of analysis that the \code{MAc} package targets:
+The \code{MAc} package has integrated functions to facilitate the meta-analytic process for correlations at every analytical stage. There are five broad areas of analysis that the \code{MAc} package targets:
  
 1. Computations to Calculate Correlations: 
 
-There are a variety of functions to compute r (correlation coefficients) from various designs reported in the primary studies. Most functions were derived from section 12.4 & Table 12.4 (pp. 231-234) of Cooper, Hedges, and Valentines Handbook of research synthesis and meta-analysis (2009).
+There are a variety of functions to compute r (correlation coefficients) from various designs reported in the primary studies. Most functions were derived from Borenstein's chapter (pp. 231-234) in \emph{The Handbook of Research Synthesis and Meta-Analysis} (Cooper, Hedges, & Valentine, 2009).
 
 2. Within-Study Aggregation of Effect Sizes:
 
-Automated functions (i.e., will compute for all studies simultaneously) for aggregating within-study effect sizes (which account for within study dependencies of effect sizes). These functions fix the correlation between predictor variables at .50 and will compute the correct aggregated effect size for all studies. Functions implements Hunter and Schmidts (2004) approach to aggregation of dependent correlations (see chapter 10, pp. 435-8).
+This package contains functions that have automated (i.e., will compute for all studies simultaneously) the process of aggregating within-study effect sizes while taking into account the dependencies among the within-study effect sizes (Hunter & Schmidt, 2004; Hedges & Olkin, 1985; Rosenthal et al., 2006). These functions fix the correlation between within-study effect sizes at .50 (Wampold et al., 1997) and will compute the correct aggregated effect size for all studies. \code{MAc} functions implement Hunter and Schmidt's (2004) recommendations for aggregating dependent correlations (see chapter 10, pp. 435-8).To our knowledge, this is the first statistical package/program that has explicitly utilized and automated this aggregation procedure, which has a dual effect of saving the researcher \bold{substantial} amounts of time while increasing the accuracy of their analyses. 
 
 3. Fixed and Random Effects Omnibus Analysis: 
 
-There are functions to calculate fixed and random effects omnibus effect sizes for correlations, outputting the omnibus (i.e., overall) effect size, variance, standard error, upper and lower confidence intervals, and the Q-statistic (heterogeneity test). 
+This package contains all the relevant functions to calculate fixed and random effects omnibus effect sizes for correlations, outputting the omnibus (i.e., overall) effect size, variance, standard error, upper and lower confidence intervals, and the Q-statistic (heterogeneity test). 
 
 4. Moderator Analyses:
 
-There are a host of functions to compute fixed and random effect moderator analyses. This includes single and multiple predictor models for both categorical and continuous data.
+There are a host of user-friendly functions to compute fixed and random effects moderator analyses. These include single and multiple predictor models for both categorical and continuous moderator data.
 
 5. Graphics:
 
-There are functions for a variety of meta-analytic graphics, including standard forest plots, funnel plots, boxplots, meta-regression scatterplots, and unique graphics, such as multi-predictor meta-regression graphs.
+This package has a variety of functions visually representing data. This includes a variety of meta-analytic graphics, including standard forest plots, funnel plots, boxplots, meta-regression scatterplots, and multi-predictor meta-regression graphs.
 }
 \author{AC Del Re & William T. Hoyt
 
 Maintainer: AC Del Re \email{acdelre@gmail.com}
 }
-\references{ Cooper, H., Hedges, L.V., & Valentine, J.C. (2009). The handbook of research synthesis and meta-analysis (2nd edition). New York: Russell Sage Foundation.
+\references{ Cooper, H., Hedges, L.V., & Valentine, J.C. (2009). \emph{The handbook of research synthesis and meta-analysis} (2nd edition). New York: Russell Sage Foundation.
 
-Hunter, J. E., Schmidt, F. L. (2004). Methods of meta-analysis (2nd edition). Thousand Oaks, CA: Sage. 
+Hunter, J. E., Schmidt, F. L. (2004). \emph{Methods of meta-analysis} (2nd edition). Thousand Oaks, CA: Sage. 
+
+Wampold, B. E., Mondin, G. W., Moody, M., Stich, F., Benson, K., & Ahn, H. (1997). A meta-analysis of outcome studies comparing bona fide psychotherapies: Empiricially, 'all must have prizes.' \emph{Psychological Bulletin, 122(3)}, 203-215.
 }
 \keyword{ package }
 \examples{ 
@@ -54,21 +56,24 @@ n<-c(10,20,13,22,28,12,12,36,19,12,36,75,33,121,37,14,40,16,14,20)
 r<-c(.68,.56,.23,.64,.49,-.04,.49,.33,.58,.18,-.11,.27,.26,.40,.49,
  .51,.40,.34,.42,.16)
 mod1<-c(1,2,3,4,1,2,8,7,5,3,9,7,5,4,3,2,3,5,7,1)
-data<-data.frame(id,n,r,mod1)
+data<-data.frame(id,n,r,mod1)  
 
 # 1. Computations to Calculate Correlations:
  
-# For example, suppose the primary study reported a t-test value for     # differences between 2 groups and the total sample size. Then, running:
+# For example, suppose the primary study reported a t-test value for differences 
+# between 2 groups and the total sample size. Then, running:
 
 r_from_t (1.74, 30)  
 
-# reported t-value (1.74) and sample size (30) will output the #correlation desired for use in the meta-analysis.
+# reported t-value (1.74) and sample size (30) will output the 
+# correlation desired for use in the meta-analysis.
 
 # 2. Within-Study Aggregation of Effect Sizes: 
 
 MetaR(data)  
 
-# where data = data.frame with columns for r and n with multiple rows per # study. Outputs an aggregated data.frame with 1 effect size per study 
+# where data = data.frame with columns for r and n with multiple rows per
+# study. Outputs an aggregated data.frame with 1 effect size per study 
 
 # 3. Fixed and Random Effects Omnibus Analysis
 
@@ -80,7 +85,8 @@ OmnibusES(data)
 
 MAreg1(data, data$mod1) 
  
-# where data = data.frame with columns for r and n data$mod1 = moderator #variable of interest.
+# where data = data.frame with columns for r and n. data$mod1 = moderator
+# variable of interest.
 
 # 5. Graphics:
 

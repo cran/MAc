@@ -8,12 +8,12 @@
 CatModf(meta, mod)
 }
 \arguments{
-  \item{meta}{data.frame with r (correlation coefficients) and n (sample size) for each study.
+  \item{meta}{\code{data.frame} with r (correlation coefficients) and n (sample size) for each study.
 }
   \item{mod}{Categorical moderator variable used for moderator analysis.
 }
 }
-\details{See page 280-288 in Cooper et al. (2009) for the computations used in this function.
+\details{See Konstantopoulos & Hedges (2009; pp. 280-288) for the computations used in this function.
 }
 \value{
 Fixed effects moderator:
@@ -28,22 +28,24 @@ Fixed effects moderator:
 }
 \item{UpperLimit}{ Upper 95\% confidence interval.
 }
-\item{Z-value}{ Z-score (standardized value).
+\item{Z-value}{ z-score (standardized value).
 }
 \item{P-value}{ Significance level.
 }
 \item{Var}{ Variance of effect size.
 }
-\item{StdError}{ Sqrt of variance.
+\item{StdError}{ Square root of variance.
 }
 \item{Q}{ Q-statistic (measure of homogeneity).
 }
 \item{Q(df)}{ Degrees of freedom for Q-statistic.
 }
-\item{I-squared}{ Proportion of total variation in effect size that is due to heterogeneity rather than chance (see Cooper, et al., 2009; pp. 263).
+\item{I-squared}{ Proportion of total variation in effect size that is due to heterogeneity rather than chance (see Shadish & Haddock, 2009; pp. 263).
 }
 }
-\references{Cooper, H., Hedges, L.V., & Valentine, J.C. (2009). The handbook of research synthesis and meta-analysis (2nd edition). New York: Russell Sage Foundation. 
+\references{Konstantopoulos & Hedges (2009). Analyzing effect sizes: Fixed-effects models. In H. Cooper, L. V. Hedges, & J. C. Valentine (Eds.), \emph{The handbook of research synthesis and meta analysis} (pp. 279-293). New York: Russell Sage Foundation.  
+
+Shadish & Haddock (2009). Analyzing effect sizes: Fixed-effects models. In H. Cooper, L. V. Hedges, & J. C. Valentine (Eds.), \emph{The handbook of research synthesis and meta analysis} (pp. 257-278). New York: Russell Sage Foundation. 
 }
 \author{AC Del Re & William T. Hoyt
 
