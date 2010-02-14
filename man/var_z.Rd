@@ -5,10 +5,10 @@
 \description{Computes the variance of a Fisher's z transformation
 }
 \usage{
-var_z(x)
+var_z(n)
 }
 \arguments{
-  \item{x}{ Study sample size.
+  \item{n}{ Study sample size.
 }
 }
 \value{Computes the variance of Fisher's z.

@@ -5,10 +5,10 @@
 \description{Computes Fisher's z from correlation coefficient.
 }
 \usage{
-r_to_z(x)
+r_to_z(r)
 }
 \arguments{
-  \item{x}{Correlation coefficient value.
+  \item{r}{Correlation coefficient value.
 }
 }
 \value{Outputs Fisher's z statistic.

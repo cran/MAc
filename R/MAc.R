@@ -1,12 +1,14 @@
 ##==================             MAc             ================##      
 ##==================  Meta-Analysis Correlations ================##
 
+# updated: 02.13.10
+
 # Package created by AC Del Re & William T. Hoyt
 # This package contains all the relevant functions to conduct a
 # correlational meta-analysis using standard procedures as
 # described in Cooper, Hedges, & Valentine's Handbook of
 # Research Synthesis and Meta-Analysis (2009).
-# This package requires the 'ggplot2' package, 'plyr' package, and 'psych' (?)
+# This package requires the 'ggplot2' package, 'plyr' package.
 
 require('ggplot2')
 require('plyr')
@@ -46,8 +48,8 @@ require('plyr')
 # (1) Computing variance of r,  z', and variance of z':
 
 var_r <-  function(r, n) ((1 - r^2)^2)/(n - 1)  #calulate variance of r     
-r_to_z  <-  function(x) 0.5*log((1 + r)/(1 - r))  #convert to z' 
-var_z <- function(x) 1 / (n - 3)  #variance of z'
+r_to_z  <-  function(r) 0.5*log((1 + r)/(1 - r))  #convert to z' 
+var_z <- function(n) 1 / (n - 3)  #variance of z'
 
 # (2) Study reported: 
 # t (t-test value of differences between 2 groups), n (total sample size)
@@ -131,6 +133,12 @@ MetaR <-  function(meta) {
   meta$var.r <-  ifelse(is.na(meta$var.r), ((1-meta$r^2)^2)/(meta$n-1), meta$var.r)
   meta$z  <-  0.5*log((1 + meta$r)/(1-meta$r))  #computing r to z' for each study
   meta$var.z <- 1/(meta$n-3)  # computing var.z for each study
+  meta$l.ci95z <- meta$z-1.96*sqrt(meta$var.z)     #create random ci for each study
+  meta$u.ci95z <- meta$z + 1.96*sqrt(meta$var.z)
+  meta$l.ci95 <- (exp(2*meta$l.ci95z)-1)/(exp(2*meta$l.ci95z) + 1)
+  meta$u.ci95 <- (exp(2*meta$u.ci95z)-1)/(exp(2*meta$u.ci95z) + 1)  
+  meta$z.score <- meta$z/sqrt(meta$var.z)
+  meta$p.value <- 2*(1-pt(abs(meta$z.score),  meta$n-1))
   meta$wi <-  1/meta$var.z  # computing weight for each study
   meta$wiTi <- meta$wi*meta$z  # used to calculate omnibus
   meta$wiTi2 <- meta$wi*(meta$z)^2  # used to calculate omnibus
@@ -148,7 +156,9 @@ MetaR <-  function(meta) {
   meta$wi.tau <- 1/meta$var.tau  # Random effects weights
   meta$wiTi.tau <- meta$wi.tau*meta$z
   meta$wiTi2.tau <- meta$wi.tau*(meta$z)^2
-  return(meta)
+  meta$l.ci95z <- NULL 
+  meta$u.ci95z <- NULL
+ return(meta)
 }
 
 ##================= FIXED AND RANDOM EFFECTS OMNIBUS ===============##
@@ -263,7 +273,7 @@ f2 <- function(modsum) c(K=modsum$k, ES=modsum$sum.wiTi/modsum$sum.wi,
 cat_sum1 <- function(meta, mod) {
   m <- meta
   m$mod <- mod
-  meta <- ddply(m,  .(id),  summarize,  r = aggrs(r), n=mean(n),  mod = sample(mod,  1))
+  meta <- ddply(m,  .(id),  summarize,  r = aggrs(r), n=mean(n),  mod = head(mod,  1))
   meta$z  <- 0.5*log((1 + meta$r)/(1-meta$r))   
   meta$var.z <- 1/(meta$n-3)
   meta$wi <-  1/meta$var.z
@@ -321,7 +331,7 @@ f4 <- function(modsum) c(K=modsum$k, ES=modsum$sum.wiTi.tau/modsum$sum.wi.tau,
 cat_sum1R <- function(meta, mod) {
   m <- meta
   m$mod <- mod
-  meta <- ddply(m,  .(id),  summarize,  r = aggrs(r), n=mean(n),  mod = sample(mod,  1))
+  meta <- ddply(m,  .(id),  summarize,  r = aggrs(r), n=mean(n),  mod = head(mod,  1))
   meta$z <- 0.5*log((1 + meta$r)/(1-meta$r))   
   meta$var.z <- 1/(meta$n-3)
   meta$wi <- 1/meta$var.z
@@ -719,7 +729,7 @@ MAreg2  <-  function(reg) {  # Multivariate meta-regression
   df  <-  anova(reg)["Residuals",  "Df"]
   ms.error  <-  anova(reg)["Residuals",  "Mean Sq"]
   t.crit  <-  qt(.975,  df)
-  newSE.z  <-  round(summary(reg)$coef[, 2]/sqrt(ms.error), 4)  
+  newSE.z  <-  summary(reg)$coef[, 2]/sqrt(ms.error)  
   Bs.z  <-  round(summary(reg)$coef[, 1], 4)
   Bs <-  (exp(2*Bs.z)-1)/(exp(2*Bs.z) + 1)
   newSE <-  (exp(2*newSE.z)-1)/(exp(2*newSE.z) + 1)
@@ -758,6 +768,8 @@ MAregGraph <- function(meta, mod,  method="random",  modname=NULL,  title=NULL, 
   #   rich graphics. 
   m <- meta
   m$mod <- mod
+  compl<-!is.na(m$mod)
+  m<-m[compl,]
   meta <- ddply(m,  .(id),  summarize,  r = aggrs(r), n=mean(n), mod = head(mod,  1))
   meta$z  <-  0.5*log((1 + meta$r)/(1-meta$r))   
   meta$var.z <- 1/(meta$n-3)
@@ -830,7 +842,9 @@ CatModGraph <- function(meta, mod,  method="random",  modname=NULL,  title=NULL)
   #   rich graphics. 
   m <- meta
   m$mod <- mod
-  meta <- ddply(m,  .(id),  summarize,  r = aggrs(r), n=mean(n),  mod = sample(mod,  1))
+  compl<-!is.na(m$mod)
+  m<-m[compl,]
+  meta <- ddply(m,  .(id),  summarize,  r = aggrs(r), n=mean(n),  mod = head(mod,  1))
   meta$z  <-  0.5*log((1 + meta$r)/(1-meta$r))   
   meta$var.z <- 1/(meta$n-3)
   meta$wi <-  1/meta$var.z
@@ -881,7 +895,7 @@ CatModGraph <- function(meta, mod,  method="random",  modname=NULL,  title=NULL)
 
 ##=== Forrest Plot ===##
 
-ForestPlot <- function(meta, method="random",  title=NULL) {
+ForestPlot <- function(meta, method="random", title=NULL) {
   # Outputs a forest plot from a fixed or random effects omnibus analysis.
   # Computations derived from chapter 14, Cooper et al. (2009). 
   # Args:
@@ -891,7 +905,7 @@ ForestPlot <- function(meta, method="random",  title=NULL) {
   # Returns:
   #   Forest plot with omnibus effect size (fixed or random), point for each study 
   #   where size of point is based on the study's precision (based primarily on 
-  #   sample size) and 95& confidence intervals. The ggplot2 package outputs the rich graphics.  
+  #   sample size) and 95% confidence intervals. The ggplot2 package outputs the rich graphics.  
   m <- meta 
   m$id <- as.character(meta$id)                                  
   meta <- ddply(m,  .(id),  summarize,  r = aggrs(r), n=mean(n))
@@ -905,21 +919,21 @@ ForestPlot <- function(meta, method="random",  title=NULL) {
   sum.wi2 <- sum(meta$wi2, na.rm=TRUE) 
   sum.wiTi <- sum(meta$wiTi, na.rm=TRUE)    
   sum.wiTi2 <- sum(meta$wiTi2, na.rm=TRUE)   
-  if(method=="fixed") {  
-    Tz.agg <- sum.wiTi/sum.wi              
-    var.Tz.agg <- 1/sum.wi                  
-    se.Tz.agg <- sqrt(var.Tz.agg)          
-    T.agg <- (exp(2*Tz.agg)-1)/(exp(2*Tz.agg) + 1)  
-    var.T.agg <- (exp(2*var.Tz.agg)-1)/(exp(2*var.Tz.agg) + 1) 
-    Q <- sum.wiTi2-(sum.wiTi^2)/sum.wi                        
-    k <- sum(!is.na(meta$r))                                   
-    df <- k-1  
-    omnibus <- data.frame(id="Omnibus Effect Size", r=T.agg)
-    l.ci95z <- meta$z-1.96*sqrt(meta$var.z)     #create fixed ci for each study
-    u.ci95z <- meta$z + 1.96*sqrt(meta$var.z)
-    l.ci95 <- (exp(2*l.ci95z)-1)/(exp(2*l.ci95z) + 1)
-    u.ci95 <- (exp(2*u.ci95z)-1)/(exp(2*u.ci95z) + 1)
-    forest <- ggplot(meta,  aes(y = factor(id, levels=rev(levels(id))),  x = r))  +  
+   if(method=="fixed") {  
+     Tz.agg <- sum.wiTi/sum.wi              
+     var.Tz.agg <- 1/sum.wi                  
+     se.Tz.agg <- sqrt(var.Tz.agg)          
+     T.agg <- (exp(2*Tz.agg)-1)/(exp(2*Tz.agg) + 1)  
+     var.T.agg <- (exp(2*var.Tz.agg)-1)/(exp(2*var.Tz.agg) + 1) 
+     Q <- sum.wiTi2-(sum.wiTi^2)/sum.wi                        
+     k <- sum(!is.na(meta$r))                                   
+     df <- k-1  
+     omnibus <- data.frame(id="Omnibus", r=T.agg)
+     meta$l.ci95z <- meta$z-1.96*sqrt(meta$var.z)     #create fixed ci for each study
+     meta$u.ci95z <- meta$z + 1.96*sqrt(meta$var.z)
+     meta$l.ci95 <- (exp(2*meta$l.ci95z)-1)/(exp(2*meta$l.ci95z) + 1)
+     meta$u.ci95 <- (exp(2*meta$u.ci95z)-1)/(exp(2*meta$u.ci95z) + 1)
+     forest <- ggplot(meta,  aes(y = factor(id, levels=rev(levels(id))),  x = r))  +  
                     geom_vline(xintercept=0) + 
                     geom_point(data=omnibus, colour="red", size=8, shape=23) + 
                     geom_point(aes(size=wi)) + 
@@ -928,34 +942,33 @@ ForestPlot <- function(meta, method="random",  title=NULL) {
                     geom_vline(colour="red", linetype=2,  xintercept=T.agg) + 
                     xlim(-1, 1) + 
                     xlab("Effect Size") + 
+                    #scale_y_discrete(breaks = NA, labels=NA)+  # supress y-labels
                     ylab(NULL) 
   }
   if(method == "random") {
-  comp <- sum.wi-sum.wi2/sum.wi
-  Q <- sum.wiTi2-(sum.wiTi^2)/sum.wi                         
-  k <- sum(!is.na(meta$r))                                  
-  df <- k-1      
-  tau <- (Q-k + 1)/comp 				#random effects variance
-  meta$var.tau <- meta$var.z + tau
-  meta$wi.tau <- 1/meta$var.tau
-  meta$wiTi.tau <- meta$wi.tau*meta$z
-  meta$wiTi2.tau <- meta$wi.tau*(meta$z)^2
-  sum.wi.tau <- sum(meta$wi.tau, na.rm=TRUE)
-  sum.wiTi.tau <- sum(meta$wiTi.tau, na.rm=TRUE) 
-  sum.wiTi2.tau <- sum(meta$wiTi2.tau, na.rm=TRUE)
-  Tz.agg.tau <- sum.wiTi.tau/sum.wi.tau
-  var.Tz.agg.tau <-  1/sum.wi.tau                         #the following is inaccurate 14.23:  (Q - df)/comp
-  se.Tz.agg.tau <- sqrt(var.Tz.agg.tau)
-  T.agg.tau <- (exp(2*Tz.agg.tau)-1)/(exp(2*Tz.agg.tau) + 1)
-  var.T.agg.tau <- (exp(2*var.Tz.agg.tau)-1)/(exp(2*var.Tz.agg.tau) + 1)
-  omnibus.tau  <- data.frame(id="Omnibus Effect Size", r=T.agg.tau)
-  l.ci95z <- meta$z-1.96*sqrt(meta$var.tau)     #create random ci for each study
-  u.ci95z <- meta$z + 1.96*sqrt(meta$var.tau)
-  l.ci95 <- (exp(2*l.ci95z)-1)/(exp(2*l.ci95z) + 1)
-  u.ci95 <- (exp(2*u.ci95z)-1)/(exp(2*u.ci95z) + 1)
-  meta$l.ci95 <- ifelse(l.ci95<=-1, -1, l.ci95)
-  meta$u.ci95 <- ifelse(u.ci95>=1, 1, u.ci95)
-  forest <- ggplot(meta,  aes(y = factor(id, levels=rev(levels(id))),  x = r))  +  #factor(id, levels=rev(levels(id)))
+    comp <- sum.wi-sum.wi2/sum.wi
+    Q <- sum.wiTi2-(sum.wiTi^2)/sum.wi                         
+    k <- sum(!is.na(meta$r))                                  
+    df <- k-1      
+    tau <- (Q-k + 1)/comp 				#random effects variance
+    meta$var.tau <- meta$var.z + tau
+    meta$wi.tau <- 1/meta$var.tau
+    meta$wiTi.tau <- meta$wi.tau*meta$z
+    meta$wiTi2.tau <- meta$wi.tau*(meta$z)^2
+    sum.wi.tau <- sum(meta$wi.tau, na.rm=TRUE)
+    sum.wiTi.tau <- sum(meta$wiTi.tau, na.rm=TRUE) 
+    sum.wiTi2.tau <- sum(meta$wiTi2.tau, na.rm=TRUE)
+    Tz.agg.tau <- sum.wiTi.tau/sum.wi.tau
+    var.Tz.agg.tau <-  1/sum.wi.tau                         #the following is inaccurate 14.23:  (Q - df)/comp
+    se.Tz.agg.tau <- sqrt(var.Tz.agg.tau)
+    T.agg.tau <- (exp(2*Tz.agg.tau)-1)/(exp(2*Tz.agg.tau) + 1)
+    var.T.agg.tau <- (exp(2*var.Tz.agg.tau)-1)/(exp(2*var.Tz.agg.tau) + 1)
+    omnibus.tau  <- data.frame(id="Omnibus", r=T.agg.tau)
+    meta$l.ci95z <- meta$z-1.96*sqrt(meta$var.z)     #create random ci for each study
+    meta$u.ci95z <- meta$z + 1.96*sqrt(meta$var.z)
+    meta$l.ci95 <- (exp(2*meta$l.ci95z)-1)/(exp(2*meta$l.ci95z) + 1)
+    meta$u.ci95 <- (exp(2*meta$u.ci95z)-1)/(exp(2*meta$u.ci95z) + 1)
+    forest <- ggplot(meta,  aes(y = factor(id, levels=rev(levels(id))),  x = r))  +  #factor(id, levels=rev(levels(id)))
                   geom_vline(xintercept=0) + 
                   geom_point(data=omnibus.tau, colour="red",  size=8,  shape=23) + 
                   geom_point(aes(size=wi.tau)) + 
@@ -964,10 +977,12 @@ ForestPlot <- function(meta, method="random",  title=NULL) {
                   geom_vline(colour="red", linetype=2,  xintercept=T.agg.tau) + 
                   xlim(-1, 1) + 
                   xlab("Effect Size") + 
+                  #scale_y_discrete(breaks = NA, labels=NA)+  # supress y-labels
                   ylab(NULL) 
   }
   return(forest)
 }
+
 ##=== Funnel Plot ===## 
 
 FunnelPlot <- function(meta, method="random",  title=NULL) {
@@ -1104,15 +1119,15 @@ ComplData <- function(meta, mod1,  mod2=NULL, mod3=NULL, mod4=NULL, mod5=NULL,
     m$mod1 <- mod1
     compl <- !is.na(m$mod1)
     m <- m[compl, ]
-    meta <- ddply(m,  .(id),  summarize,  r = aggrs(r), n=mean(n), mod1 = sample(mod1,  1)) 
+    meta <- ddply(m,  .(id),  summarize,  r = aggrs(r), n=mean(n), mod1 = head(mod1,  1))  # using sample instead of head isnt working as expected
   }
   if(predictors==2) {
     m$mod1 <- mod1
     m$mod2 <- mod2
     compl <- !is.na(m$mod1)& !is.na(m$mod2)
     m <- m[compl, ]
-    meta <- ddply(m,  .(id),  summarize,  r = aggrs(r), n=mean(n), mod1 = sample(mod1,  1),  
-                  mod2 = sample(mod2,  1) ) 
+    meta <- ddply(m,  .(id),  summarize,  r = aggrs(r), n=mean(n), mod1 = head(mod1,  1),  
+                  mod2 = head(mod2,  1) ) 
   }
   if(predictors==3) {
     m$mod1 <- mod1
@@ -1120,8 +1135,8 @@ ComplData <- function(meta, mod1,  mod2=NULL, mod3=NULL, mod4=NULL, mod5=NULL,
     m$mod3 <- mod3
     compl <- !is.na(m$mod1)& !is.na(m$mod2)& !is.na(m$mod3)
     m <- m[compl, ]
-    meta <- ddply(m,  .(id),  summarize,  r = aggrs(r), n=mean(n), mod1 = sample(mod1,  1),  
-                  mod2 = sample(mod2,  1), mod3 = sample(mod3,  1) ) 
+    meta <- ddply(m,  .(id),  summarize,  r = aggrs(r), n=mean(n), mod1 = head(mod1,  1),  
+                  mod2 = head(mod2,  1), mod3 = head(mod3,  1) ) 
   }
   if(predictors==4) {
     m$mod1 <- mod1
@@ -1130,8 +1145,8 @@ ComplData <- function(meta, mod1,  mod2=NULL, mod3=NULL, mod4=NULL, mod5=NULL,
     m$mod4 <- mod4
     compl <- !is.na(m$mod1)& !is.na(m$mod2)& !is.na(m$mod4)& !is.na(m$mod4)
     m <- m[compl, ]
-    meta <- ddply(m,  .(id),  summarize,  r = aggrs(r), n=mean(n), mod1 = sample(mod1,  1),  
-                  mod2 = sample(mod2,  1), mod3 = sample(mod3,  1), mod4 = sample(mod4,  1) ) 
+    meta <- ddply(m,  .(id),  summarize,  r = aggrs(r), n=mean(n), mod1 = head(mod1,  1),  
+                  mod2 = head(mod2,  1), mod3 = head(mod3,  1), mod4 = head(mod4,  1) ) 
   }
   if(predictors==5) {
     m$mod1 <- mod1
@@ -1142,9 +1157,9 @@ ComplData <- function(meta, mod1,  mod2=NULL, mod3=NULL, mod4=NULL, mod5=NULL,
     compl <- !is.na(m$mod1)& !is.na(m$mod2)& !is.na(m$mod4)& !is.na(m$mod4)&
              !is.na(m$mod5)
     m <- m[compl, ]
-    meta <- ddply(m,  .(id),  summarize,  r = aggrs(r), n=mean(n), mod1 = sample(mod1,  1),  
-                  mod2 = sample(mod2,  1), mod3 = sample(mod3,  1), mod4 = sample(mod4,  1), 
-                  mod5 = sample(mod5,  1)  ) 
+    meta <- ddply(m,  .(id),  summarize,  r = aggrs(r), n=mean(n), mod1 = head(mod1,  1),  
+                  mod2 = head(mod2,  1), mod3 = head(mod3,  1), mod4 = head(mod4,  1), 
+                  mod5 = head(mod5,  1)  ) 
   }
   meta$z  <-  0.5*log((1 + meta$r)/(1-meta$r))   
   meta$var.z <- 1/(meta$n-3)
@@ -1195,7 +1210,7 @@ MultiModGraph <- function(meta, conmod,  catmod, method="random",
   compl <- !is.na(m$conmod)& !is.na(m$catmod)
   m <- m[compl, ]
   meta <- ddply(m,  .(id),  summarize,  r = aggrs(r), n=mean(n), 
-                catmod = sample(catmod,  1), conmod = head(conmod,  1) ) 
+                catmod = head(catmod,  1), conmod = head(conmod,  1) ) 
   meta$z  <-  0.5*log((1 + meta$r)/(1-meta$r))   
   meta$var.z <- 1/(meta$n-3)
   meta$wi <-  1/meta$var.z
@@ -1239,50 +1254,46 @@ MultiModGraph <- function(meta, conmod,  catmod, method="random",
   return(multimod)
 }
 
+
+# Correction for Attenuation
+
 Rho_TU<- function(r,xx,yy) {
   r.corrected<-r/(sqrt(xx)*sqrt(yy))
   return(r.corrected)
    }
 
-CorAtten <- function(meta, xx, yy) {
-  # Used to correct for attenuated effect sizes due to measurement unreliability.
-  # Args:
-  #   meta: data.frame with r (correlation coefficients) and n (sample size)for each study.
-  #   xx: Column for reliability of predictor variable ("independent variable").  
-  #   yy: Column for reliability of outcome variable ("dependent variable").
-  # Returns:
-  # data.frame with a new column for correlations corrected for measurement
-  # unreliability, updated standard errors, variance, and study weights based on these
-  # corrected values (see Hunter & Schmidt, 2004; pp. 97-98). Studys without reliability 
-  # information will remain unchanged, as will their standard errors, variances and weights.
-  m <- meta
-  meta$xx <- xx
-  meta$yy <- yy
-  # Rho_TU is the correction function (internal MAc function) 
-  meta$r.adj <- ifelse(is.na(meta$xx &meta$yy),meta$r, Rho_TU(meta$r, meta$xx, meta$yy)) 
-  meta$z  <-  0.5*log((1 + meta$r.adj)/(1-meta$r.adj))  
-  meta$var.r <- ((1-meta$r.adj^2)^2)/(meta$n-1) 
-  meta$var.r2 <- ifelse(is.na(m$xx &m$yy), meta$var.r, meta$var.r/(xx*yy) ) # corrected var 
-  meta$var.z <- 1/(meta$n-3) # Is there a formula to transform to z based on var.r? In this format the above var.r for corrected r is erased. talk with hoyt!
-  meta$wi <-  1/meta$var.z
-  meta$wiTi <- meta$wi*meta$z
-  meta$wiTi2 <- meta$wi*(meta$z)^2
-  meta$k <- length(meta$mod)
-  mod <- meta$mod
-  sum.wi <- sum(meta$wi, na.rm=TRUE)    
-  sum.wi2 <- sum(meta$wi2, na.rm=TRUE)
-  sum.wiTi <- sum(meta$wiTi, na.rm=TRUE)    
-  sum.wiTi2 <- sum(meta$wiTi2, na.rm=TRUE)
-  comp <- sum.wi-sum.wi2/sum.wi
-  Q <- sum.wiTi2-(sum.wiTi^2)/sum.wi                         
-  k <- sum(!is.na(meta$r))                                  
-  df <- k-1      
-  tau <- (Q-k + 1)/comp 				
-  meta$var.tau <- meta$var.z + tau
-  meta$wi.tau <- 1/meta$var.tau
-  meta$wiTi.tau <- meta$wi.tau*meta$z
-  meta$wiTi2.tau <- meta$wi.tau*(meta$z)^2
-  return(meta)
+
+CorAtten <- function (meta, xx, yy) 
+{
+    m <- meta
+    meta$xx <- xx
+    meta$yy <- yy
+    meta$r.adj <- ifelse(is.na(meta$xx & meta$yy), meta$r, Rho_TU(meta$r, 
+        meta$xx, meta$yy))
+    meta$z <- 0.5 * log((1 + meta$r.adj)/(1 - meta$r.adj))
+    meta$var.r <- ((1 - meta$r.adj^2)^2)/(meta$n - 1)
+    meta$var.r2 <- ifelse(is.na(m$xx & m$yy), meta$var.r, meta$var.r/(xx * 
+        yy))
+    meta$var.z <- 1/(meta$n - 3)
+    meta$wi <- 1/meta$var.z
+    meta$wiTi <- meta$wi * meta$z
+    meta$wiTi2 <- meta$wi * (meta$z)^2
+    meta$k <- length(meta$mod)
+    mod <- meta$mod
+    sum.wi <- sum(meta$wi, na.rm = TRUE)
+    sum.wi2 <- sum(meta$wi2, na.rm = TRUE)
+    sum.wiTi <- sum(meta$wiTi, na.rm = TRUE)
+    sum.wiTi2 <- sum(meta$wiTi2, na.rm = TRUE)
+    comp <- sum.wi - sum.wi2/sum.wi
+    Q <- sum.wiTi2 - (sum.wiTi^2)/sum.wi
+    k <- sum(!is.na(meta$r))
+    df <- k - 1
+    tau <- (Q - k + 1)/comp
+    meta$var.tau <- meta$var.z + tau
+    meta$wi.tau <- 1/meta$var.tau
+    meta$wiTi.tau <- meta$wi.tau * meta$z
+    meta$wiTi2.tau <- meta$wi.tau * (meta$z)^2
+    return(meta)
 }
- 
+
 
