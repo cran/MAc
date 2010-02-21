@@ -2,7 +2,7 @@
 \alias{MAc-package}
 \alias{MAc}
 \docType{package}
-\title{Meta-Analysis for Correlations
+\title{Meta-Analysis with Correlations
 }
 \description{ This package contains all the relevant functions to conduct a correlational meta-analysis using recommended procedures as described in \emph{The Handbook of Research Synthesis and Meta-Analysis} (Cooper, Hedges, and Valentine, 2009). The goal in creating this package was to provide a variety of user-friendly functions to assist researchers in the process of conducting a meta-analysis, from the initial to final stages of their analytic endeavor. The meta-analyst can begin their project by using \code{MAc} functions to derive correlation coefficents from the primary studies, when statistics other than correlations are reported (e.g., t-test, p-value, or Cohen's d). Then, the analyst can aggregate all within-study effect sizes (while accounting for within-study dependencies) based on recommended procedures by Hunter & Schmidt (2004), calculate omnibus effect sizes under a fixed and random effects model, and assess for significant moderators (categorical and continuous, single and multi-predictor models) in the dataset. Finally, the meta-analyst can use one of several user-friendly graphics functions to visually represent their data in an elegant manner. 
 }
@@ -10,7 +10,7 @@
 \tabular{ll}{
 Package: \tab MAc\cr
 Type: \tab Package\cr
-Version: \tab 1.0.2\cr
+Version: \tab 1.0.4\cr
 Date: \tab 2010-02-14\cr
 License: \tab GPL-2\cr
 LazyLoad: \tab yes\cr

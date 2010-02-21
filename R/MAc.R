@@ -1,7 +1,7 @@
 ##==================             MAc             ================##      
 ##==================  Meta-Analysis Correlations ================##
 
-# updated: 02.13.10
+# updated: 02.20.10
 
 # Package created by AC Del Re & William T. Hoyt
 # This package contains all the relevant functions to conduct a
@@ -13,6 +13,31 @@
 require('ggplot2')
 require('plyr')
 #require('psych') 
+
+##=== New Functions ===##
+
+# new element of function for mods 2.20.10. Big thanks to 
+# Jim Holtman for the function to randomly select mods
+# integrated into agg_r2()
+# New function: 2.16.10
+# Multiple predictor regression model fit
+# (required inputs are lm saved as objects)
+
+MRfit <- function( ...) {
+  models <- list(...)
+  fit<- do.call(anova, models)
+  fit$R2 <- 1 - (fit$RSS / fit$RSS[1])
+  fit$R2.change <- c(NA, diff(fit$R2))
+  fit$R2[1] <- NA
+  names(fit) <- c("df.Q", "Qw", "predictors", "Qb", "F",  "Pvalue", 
+                  "R^2", "R^2.change")
+  return(fit)
+}
+
+
+
+# a formula for attenuation already created:  correct.cor(x, y)
+
 
 ##=== Preliminary Steps ===##
 
@@ -113,6 +138,17 @@ agg_r <- function(meta) {
   agg.data  <-  merge(agg,  ns,  by='id') 
   return(agg.data)
 }
+
+# used to randomly select one level of mod if study reports multi levels
+
+agg_r2 <- function(meta, mod) {
+  agg <- with(meta,  aggregate(list(r = r),  by = list(id = id, mod=mod),  aggrs))
+  ns <- with(meta,  aggregate(list(n = n),  by = list(id = id, mod=mod),  mean))
+  meta  <-  merge(agg,  ns,  by= c('id','mod')) 
+  meta <- as.data.frame(meta)
+  meta$n <- round(ns$n, 0)
+  return(meta)
+  }
 
 ##=== Add Fixed and Random Effects Weights ===##
 # Required input is a data.frame with column names id (study id), 
@@ -244,9 +280,9 @@ OmnibusES<-  function(meta,  var="weighted" ) {
                  z.value=z.valueR, p.value=p.valueR, Q=Q, df.Q=df,  p_homog=p.homog, 
                  I2=I2))
   omni.data <- as.data.frame(c(Fixed, Random))      
-  omni.data$Omnibus <- c("K", "EffectSize", "Var(ES)", "StdError", "LowerLimit", 
-                         "UpperLimit", "Z-value", "P-value", "Q", "df(Q)", "P-hetero", 
-                         "I-squared")
+  omni.data$Omnibus <- c("k", "ES", "var.ES", "SE", "CI.lower", 
+                         "CI.upper", "Z", "p", "Q", "df", "p.hetero", 
+                         "I2")
   omni.data <- omni.data[c(3, 1, 2)]
   omni.data <- as.data.frame(omni.data)
   row.names(omni.data) <- NULL
@@ -268,12 +304,20 @@ f2 <- function(modsum) c(K=modsum$k, ES=modsum$sum.wiTi/modsum$sum.wi,
                          Var=1/modsum$sum.wi, 
                          Q=modsum$sum.wiTi2-(modsum$sum.wiTi^2)/modsum$sum.wi)
 
-# Intermediate level function: sums relevant es information by each moderator level 
+# pick_one added 2.17.10 (big thanks to Hadley Wickham for assistance)
 
+pick_one <- function(x) {
+ if (length(x) == 1) return(x)
+ sample(x, 1)
+}
+
+# Intermediate level function: sums relevant es information by each moderator level 
 cat_sum1 <- function(meta, mod) {
   m <- meta
-  m$mod <- mod
-  meta <- ddply(m,  .(id),  summarize,  r = aggrs(r), n=mean(n),  mod = head(mod,  1))
+  m$mod <- mod 
+  meta <- agg_r2(m,m$mod)
+  meta <- do.call(rbind, lapply(split(meta, meta$id), 
+            function(.data) .data[sample(nrow(.data), 1),]))
   meta$z  <- 0.5*log((1 + meta$r)/(1-meta$r))   
   meta$var.z <- 1/(meta$n-3)
   meta$wi <-  1/meta$var.z
@@ -331,7 +375,9 @@ f4 <- function(modsum) c(K=modsum$k, ES=modsum$sum.wiTi.tau/modsum$sum.wi.tau,
 cat_sum1R <- function(meta, mod) {
   m <- meta
   m$mod <- mod
-  meta <- ddply(m,  .(id),  summarize,  r = aggrs(r), n=mean(n),  mod = head(mod,  1))
+  meta <- agg_r2(m,m$mod)
+  meta <- do.call(rbind, lapply(split(meta, meta$id), 
+            function(.data) .data[sample(nrow(.data), 1),]))
   meta$z <- 0.5*log((1 + meta$r)/(1-meta$r))   
   meta$var.z <- 1/(meta$n-3)
   meta$wi <- 1/meta$var.z
@@ -414,17 +460,17 @@ CatModf <-  function(meta,  mod) {
   mod.sig$L.95ci <- (exp(2*mod.sig$L.95ci)-1)/(exp(2*mod.sig$L.95ci) + 1)
   mod.sig$U.95ci <- (exp(2*mod.sig$U.95ci)-1)/(exp(2*mod.sig$U.95ci) + 1)
   mod.sig$df.Q <- mod.sig$K-1
-  mod.sig$p_homog <- ifelse(mod.sig$df.Q==0,  1,  round(pchisq(mod.sig$Q, mod.sig$df.Q, lower=FALSE), 5)) #work on this:if(mod.sig$df.Q[mod.sig$df.Q==0]) 1.0000 else pchisq(mod.sig$Q, mod.sig$df.Q, lower=FALSE)
+  mod.sig$p_homog <- ifelse(mod.sig$df.Q==0,  1,  round(pchisq(mod.sig$Q, mod.sig$df.Q, lower=FALSE), 5)) 
   mod.sig$I2 <- (mod.sig$Q-(mod.sig$K-1))/mod.sig$Q   #I-squared  
   mod.sig$I2 <- ifelse(mod.sig$I2<0, 0, mod.sig$I2)     
   mod.sig$I2 <- paste(round(mod.sig$I2*100, 4),  "%",  sep="")
   mod.sig2 <- mod.sig[, c(1, 2, 3, 6, 7, 9, 10, 4, 8, 5, 11, 12, 13)] #effects due to heterogeneity rather than chance (p263)
   rownames(mod.sig2) <- NULL
-  colnames(mod.sig2) <- c("Mod", "K", "ES", "LowerLimit", "UpperLimit",  "Z-value", 
-  "P-value",  "Var", "StdError",  "Q", "df(Q)", "P-hetero",  "I-squared")
+  colnames(mod.sig2) <- c("Mod", "k", "ES", "CI.lower", "CI.upper",  "Z", 
+  "p",  "var.ES", "SE",  "Q", "df", "p.hetero",  "I2")
   return(mod.sig2)
 }
-   
+
 # Fixed effect single predictor categorical moderator Q-statistic
 
 CatModfQ <- function(meta,  mod) {
@@ -437,7 +483,7 @@ CatModfQ <- function(meta,  mod) {
   #   Fixed effects moderator Q-statistic, Q-within & between, df(Qw & Qb), and 
   #   homogeneity p-value within & between levels.
   mod.sig <- CatModf(meta, mod)
-  k <- mod.sig$K[mod.sig$Mod=="Overall"]                           #number of studies
+  k <- mod.sig$k[mod.sig$Mod=="Overall"]                           #number of studies
   levels <- length(mod.sig$Mod)-1
   Qb.df <- levels-1 
   Qw.df <- k-levels
@@ -447,13 +493,13 @@ CatModfQ <- function(meta,  mod) {
   Qb <- Q-Qw                                     #overall between-group heterogeneity
   Qb_p.value <- 1-pchisq(Qb, Qb.df)
   mod.Qstat <- data.frame(Q, Qw, Qw.df, Qw_p.value, Qb, Qb.df, Qb_p.value)
-  names(mod.Qstat) <- c("Q", "Qw", "df(Qw)",  "P-value(within)", "Qb", "df(Qb)", "P-value(between)")
+  names(mod.Qstat) <- c("Q", "Qw", "df.w",  "p.w", "Qb", "df.b", "p.b")
   return(mod.Qstat)
 }
          
 # Function for planned comparisons between 2 levels of moderator (fixed effects)
 
-CatCompf <- function(meta,  mod,  x1,  x2,  method= "post.hoc") {
+CatCompf <- function(meta,  mod, x1, x2,  method= "post.hoc1") {
   # Directly compares 2 levels of a categorical moderator using a fixed effects model. 
   # Computations derived from chapter 15, Cooper et al. (2009). 
   # Args:
@@ -462,42 +508,64 @@ CatCompf <- function(meta,  mod,  x1,  x2,  method= "post.hoc") {
   #   x1: One level of categorical moderator
   #   x2: Other level (comparison group) of same categorical moderator
   #   method: "post.hoc" assumes the comparision was not planned prior to conducting
-  #   the meta-analysis. The other option "planned" assumes you have planned a priori
-  #   to compare these levels of the categorical moderator. Default is "post.hoc". 
+  #           the meta-analysis. The other option "planned" assumes you have planned 
+  #           a priori to compare these levels of the categorical moderator. 
+  #           Default is "post.hoc1". 
   # Returns:
-  #   Fixed effects moderator means per group, mean difference (d), variance of difference,
+  #   Random effects moderator means per group, mean difference (d), variance of difference,
   #   p-value, and 95% confidence intervals. 
-  modsig <- CatModf(meta, mod)
+  modsig <- qrs(meta, mod)
   com1 <- levels(modsig$Mod)[x1]  # first level of moderator
   com2 <- levels(modsig$Mod)[x2]  # second level of moderator
   x1.es <- modsig[modsig$Mod==com1, "ES"]
   x2.es <- modsig[modsig$Mod==com2, "ES"]
   x1.var <- modsig[modsig$Mod==com1, "Var"]
   x2.var <- modsig[modsig$Mod==com2, "Var"]
-  g <-  (-1)*x1.es + 1*x2.es        # pg 288 (Cooper et al.,  2009)
+  g <- (-1)*x1.es + 1*x2.es  # pg 288 (Cooper et al.,  2009)
   var <- (-1)^2*x1.var + (1)^2*x2.var
   df <- 2-1
   chi.sqr <- g^2/var
-  if(method == "post.hoc") {    #post-hoc comparison (Scheffe method)
+  m <- meta 
+  m$mod <- mod
+  compl<-!is.na(m$mod)
+  m<-m[compl,]
+  meta <- agg_r2(m,m$mod)
+  meta <- do.call(rbind, lapply(split(meta, meta$id), 
+          function(.data) .data[sample(nrow(.data), 1),]))
+  meta$z <- 0.5*log((1 + meta$r)/(1-meta$r))   
+  meta$var.z <- 1/(meta$n-3)
+  meta$wi <-  1/meta$var.z
+  if(method == "post.hoc1") {  # post-hoc comparison (Tukey HSD method)
+    fit<-aov(meta$z~meta$mod,weights=meta$wi)
+    fit<-TukeyHSD(fit)
+  }
+  if(method == "post.hoc2") {  # post-hoc comparison (Scheffe method)
     z <- g/sqrt(var)
     z2 <- z^2
-    levels <- length(levels(modsig$Mod))
+    levels <- length(levels(as.factor(mod)))
     df.post <- levels-1 
     p.value <- 1-pchisq(z2, df.post)
     L.95ci <- g-1.96*sqrt(var)
     U.95ci <- g + 1.96*sqrt(var)
   }
-  if (method == "planned") {     #planned comparison (a priori)
-    chi.sqr <- g^2/var
-    p.value <- 1-pchisq(chi.sqr, df)
-    L.95ci <- g-1.96*sqrt(var)
-    U.95ci <- g + 1.96*sqrt(var)
+  if (method == "planned") {  # planned comparison (a priori)
+   df <- 2-1
+   chi.sqr <- g^2/var
+   p.value <- 1-pchisq(chi.sqr, df)
+   L.95ci <- g-1.96*sqrt(var)
+   U.95ci <- g + 1.96*sqrt(var)
   }
-  mean.diff <- data.frame(x1.es, x2.es, g, var, p.value, L.95ci, U.95ci)
-  names(mean.diff) <- c("Mean1", "Mean2", "d", "Var(d)",  
-  "P-value", "LowerLimits", "UpperLimits" )
-  return(mean.diff)
+  if(method == "post.hoc1") {return(fit)}
+    else{
+      mean.diff <- data.frame(g, var, p.value, L.95ci, U.95ci)
+      names(mean.diff) <- c("d", "var.d",  
+      "p", "CI.lower", "CI.lower" )
+      return(mean.diff)
+
+  }
 }
+
+
 
 # Function for planned comparisons between 2 levels of moderator (random effects)
 
@@ -523,12 +591,15 @@ CatModr <-  function(meta,  mod) {
   mod.sig$Q <- mod.sig$Q
   mod.sig$df.Q <- mod.sig$K-1
   mod.sig$p_homog <- ifelse(mod.sig$df.Q==0, 1, round(pchisq(mod.sig$Q, mod.sig$df.Q, lower=FALSE), 5)) 
-  mod.sig2 <- mod.sig[, c(1, 2, 3, 6, 7, 9, 10, 8)]
+  mod.sig$I2 <- (mod.sig$Q-(mod.sig$K-1))/mod.sig$Q   #I-squared  
+  mod.sig$I2 <- ifelse(mod.sig$I2<0, 0, mod.sig$I2)     
+  mod.sig$I2 <- paste(round(mod.sig$I2*100, 4),  "%",  sep="")
+  mod.sig2 <- mod.sig[, c(1, 2, 3, 6, 7, 9, 10, 4, 8, 5, 11, 12, 13)]
   rownames(mod.sig2) <- NULL
-  colnames(mod.sig2) <- c("Mod", "K", "ES", "LowerLimit", "UpperLimit",  "Z-value", 
-  "P-value", "StdError")
+  colnames(mod.sig2) <- c("Mod", "k", "ES", "CI.lower", "CI.upper",  "Z", 
+  "p",  "var.ES", "SE",  "Q", "df", "p.hetero",  "I2")
   return(mod.sig2)
-}
+}  
 
 # Intermediate function for random effects Q-statistic test
 
@@ -550,8 +621,8 @@ qrs <- function(meta,  mod) {
   mod.sig$I2 <- paste(round(mod.sig$I2*100, 4),  "%",  sep="")
   mod.sig2 <- mod.sig[, c(1, 2, 3, 6, 7, 9, 10, 4, 8, 5, 11, 12, 13)] #effects due to heterogeneity rather than chance (p263)
   rownames(mod.sig2) <- NULL
-  colnames(mod.sig2) <- c("Mod", "K", "ES", "LowerLimit", "UpperLimit",  "Z-value", 
-  "P-value",  "Var", "StdError",  "Q", "df(Q)", "P-hetero",  "I-squared")
+  colnames(mod.sig2) <- c("Mod", "k", "ES", "CI.lower", "CI.upper",  "Z", 
+  "p",  "var.ES", "SE",  "Q", "df", "p.hetero",  "I2")
   return(mod.sig2)
 }
 
@@ -567,7 +638,7 @@ CatModrQ <-  function(meta,  mod) {
   #   Random effects moderator Q-statistic, Q-within & between, df(Qw & Qb), and 
   #   homogeneity p-value within & between levels.
   mod.sig <- qrs(meta, mod)
-  k <- mod.sig$K[mod.sig$Mod=="Overall"]                         #number of studies
+  k <- mod.sig$k[mod.sig$Mod=="Overall"]                         #number of studies
   levels <- length(mod.sig$Mod)-1
   Qb.df <- levels-1 
   Qw.df <- k-levels
@@ -577,13 +648,29 @@ CatModrQ <-  function(meta,  mod) {
   Qb <- Q-Qw                                     #overall between-group heterogeneity
   Qb_p.value <- 1-pchisq(Qb, Qb.df)
   mod.Qstat <- data.frame(Qb, Qb.df, Qb_p.value)
-  names(mod.Qstat) <- c("Qb", "df(Qb)", "P-value(between)")
+  names(mod.Qstat) <- c("Qb", "df.b", "p.b")
   return(mod.Qstat)
 }
 
+## new function 2.20.10
+# Integrated function with fixed and random es, Q, etc
+CatMod <- function(meta, mod) {
+  fixed <- CatModf(meta,mod)
+  random <-CatModr(meta,mod)
+  random$Q <- fixed$Q
+  random$df<- fixed$df
+  random$p.hetero <- fixed$p.hetero
+  random$I2 <- fixed$I2
+  Qf <- CatModfQ(meta,mod) # fixed effect Q
+  Qr <- CatModrQ(meta,mod)
+  out<- list(Fixed=fixed, Q.fixed= Qf, Random=random, Q.random= Qr)
+  return(out)
+}
+
+
 # Function for planned comparisons between 2 levels of moderator (random effects)
 
-CatCompr <- function(meta,  mod, x1, x2,  method= "post.hoc") {
+CatCompr <- function(meta,  mod, x1, x2,  method= "post.hoc1") {
   # Directly compares 2 levels of a categorical moderator using a random effects model. 
   # Computations derived from chapter 15, Cooper et al. (2009). 
   # Args:
@@ -609,7 +696,39 @@ CatCompr <- function(meta,  mod, x1, x2,  method= "post.hoc") {
   var <- (-1)^2*x1.var + (1)^2*x2.var
   df <- 2-1
   chi.sqr <- g^2/var
-  if(method == "post.hoc") {  # post-hoc comparison (Scheffe method)
+  m <- meta
+  m$mod <- mod
+  compl<-!is.na(m$mod)
+  m<-m[compl,]
+  meta <- agg_r2(m,m$mod)
+  meta <- do.call(rbind, lapply(split(meta, meta$id), 
+          function(.data) .data[sample(nrow(.data), 1),]))
+  meta$z  <-  0.5*log((1 + meta$r)/(1-meta$r))   
+  meta$var.z <- 1/(meta$n-3)
+  meta$wi <-  1/meta$var.z
+  meta$wi2 <- (1/meta$var.z)^2
+  meta$wiTi <- meta$wi*meta$z
+  meta$wiTi2 <- meta$wi*(meta$z)^2
+  meta$k <- meta$mod
+  mod <- meta$mod
+  sum.wi <- sum(meta$wi, na.rm=TRUE)    
+  sum.wi2 <- sum(meta$wi2, na.rm=TRUE)
+  sum.wiTi <- sum(meta$wiTi, na.rm=TRUE)    
+  sum.wiTi2 <- sum(meta$wiTi2, na.rm=TRUE)
+  comp <- sum.wi-sum.wi2/sum.wi
+  Q <- sum.wiTi2-(sum.wiTi^2)/sum.wi                         
+  k <- sum(!is.na(meta$r))                                  
+  df <- k-1      
+  tau <- (Q-k + 1)/comp 				
+  meta$var.tau <- meta$var.z + tau
+  meta$wi.tau <- 1/meta$var.tau
+  meta$wiTi.tau <- meta$wi.tau*meta$z
+  meta$wiTi2.tau <- meta$wi.tau*(meta$z)^2
+  if(method == "post.hoc1") {  # post-hoc comparison (Tukey HSD method)
+  fit<-aov(meta$z~meta$mod,weights=meta$wi)
+  fit<-TukeyHSD(fit)
+  }
+  if(method == "post.hoc2") {  # post-hoc comparison (Scheffe method)
     z <- g/sqrt(var)
     z2 <- z^2
     levels <- length(levels(as.factor(mod)))
@@ -625,11 +744,24 @@ CatCompr <- function(meta,  mod, x1, x2,  method= "post.hoc") {
    L.95ci <- g-1.96*sqrt(var)
    U.95ci <- g + 1.96*sqrt(var)
   }
-  mean.diff <- data.frame(x1.es, x2.es, g, var, p.value, L.95ci, U.95ci)
-  names(mean.diff) <- c("Mean1", "Mean2", "d", "Var(d)",  
-  "P-value", "LowerLimits", "UpperLimits" )
-  return(mean.diff)
+  if(method == "post.hoc1") {return(fit)}
+    else{
+      mean.diff <- data.frame(g, var, p.value, L.95ci, U.95ci)
+      names(mean.diff) <- c("d", "var.d",  
+      "p", "CI.lower", "CI.lower" )
+      return(mean.diff)
+  }
 }
+
+#integrated catcomp function outputting both fixed and random
+
+CatComp <- function(meta, mod, x1, x2,  method= "post.hoc1") {
+  fixed <- CatCompf(meta,mod)
+  random <-CatCompr(meta,mod)
+  out<- list(Fixed=fixed, Random=random)
+  return(out)
+}
+
 
 ##==== META-REGRESSION FUNCTIONS (for continuous & categorical moderators)====##
 
@@ -650,7 +782,12 @@ MAreg1 <- function(meta, mod, method="random") {  # Single predictor meta-regres
   #   95% confidence intervals, and adjusted p-value.
   m <- meta 
   m$mod <- mod
-  meta <- ddply(m,  .(id),  summarize,  r = aggrs(r), n=mean(n), mod = head(mod,  1))
+  compl<-!is.na(m$mod)
+  m<-m[compl,]
+  meta <- ddply(m,  .(id),  summarize,  r = aggrs(r), n=mean(n), mod = pick_one(mod))
+  #meta <- agg_r2(m,m$mod)
+  meta <- do.call(rbind, lapply(split(meta, meta$id), 
+          function(.data) .data[sample(nrow(.data), 1),]))
   meta$z <- 0.5*log((1 + meta$r)/(1-meta$r))   
   meta$var.z <- 1/(meta$n-3)
   meta$wi <-  1/meta$var.z
@@ -673,43 +810,48 @@ MAreg1 <- function(meta, mod, method="random") {  # Single predictor meta-regres
   meta$wiTi.tau <- meta$wi.tau*meta$z
   meta$wiTi2.tau <- meta$wi.tau*(meta$z)^2
   if(method == "fixed") {
-    reg <- lm(meta$z~mod, weights=meta$wi)
+    reg0 <- lm(meta$z~1, weights=meta$wi)  # empty model
+    reg <- lm(meta$z~mod, weights=meta$wi)  # model with mod  
     df <- anova(reg)["Residuals",  "Df"]
     ms.error <- anova(reg)["Residuals",  "Mean Sq"]
     t.crit <- qt(.975,  df)
-    newSE.z <- round(summary(reg)$coef[, 2]/sqrt(ms.error), 4)  # 15.20 
-    Bs.z <- round(summary(reg)$coef[, 1], 4)
+    newSE.z <- round(summary(reg)$coef[, 2]/sqrt(ms.error), 6)  # 15.20 
+    Bs.z <- round(summary(reg)$coef[, 1], 6)
     Bs <-  (exp(2*Bs.z)-1)/(exp(2*Bs.z) + 1)
     newSE <- (exp(2*newSE.z)-1)/(exp(2*newSE.z) + 1)
-    t.adj <- round(Bs/newSE, 4)
-    p.adj <- round(2*(1-pt(abs(t.adj),  df)), 4)
-    lower.ci <- round(Bs-(t.crit*newSE), 4)  # 95% CI
-    upper.ci <- round(Bs + (t.crit*newSE), 4)  # 95% CI
+    t.adj <- round(Bs/newSE, 6)
+    p.adj <- round(2*(1-pt(abs(t.adj),  df)), 6)
+    lower.ci <- round(Bs-(t.crit*newSE), 6)  # 95% CI
+    upper.ci <- round(Bs + (t.crit*newSE), 6)  # 95% CI
+    modelfit <- MRfit(reg0,reg)   # internal function to assess fit
     #sig <- symnum(p.adj,  corr = FALSE,  na = FALSE,  
     #              cutpoints <- c(0,  0.001,  0.01,  0.05,  0.1,  1), 
     #              symbols <- c("***",  "**",  "*",  ".",  " ")) 
   }
   # random effects #
   if(method == "random") {
+    reg0 <- lm(meta$z~1, weights=meta$wi.tau) 
     reg <- lm(meta$z~mod, weights=meta$wi.tau)
     df  <- anova(reg)["Residuals",  "Df"]
     ms.error <- anova(reg)["Residuals",  "Mean Sq"]
     t.crit <- qt(.975,  df)
-    newSE.z  <- round(summary(reg)$coef[, 2]/sqrt(ms.error), 4)  # 15.20 
-    Bs.z  <- round(summary(reg)$coef[, 1], 4)
+    newSE.z  <- round(summary(reg)$coef[, 2]/sqrt(ms.error), 6)  # 15.20 
+    Bs.z  <- round(summary(reg)$coef[, 1], 6)  # Need an option to keep in z' 
     Bs <- (exp(2*Bs.z)-1)/(exp(2*Bs.z) + 1)
     newSE <- (exp(2*newSE.z)-1)/(exp(2*newSE.z) + 1)
-    t.adj <- round(Bs/newSE, 4)
-    p.adj <- round(2*(1-pt(abs(t.adj),  df)), 4)
-    lower.ci <- round(Bs-(t.crit*newSE), 4)  # 95% CI
-    upper.ci <- round(Bs + (t.crit*newSE), 4)  # 95% CI
+    t.adj <- round(Bs/newSE, 6)
+    p.adj <- round(2*(1-pt(abs(t.adj),  df)), 6)
+    lower.ci <- round(Bs-(t.crit*newSE), 6)  # 95% CI
+    upper.ci <- round(Bs + (t.crit*newSE), 6)  # 95% CI
+    modelfit <- MRfit(reg0,reg)
     #sig <- symnum(p.adj,  corr = FALSE,  na = FALSE,  
     #              cutpoints <- c(0,  0.001,  0.01,  0.05,  0.1,  1), 
     #              symbols <- c("***",  "**",  "*",  ".",  " ")) 
   }
-  out <- data.frame(Beta=Bs, StdError=newSE,  Tvalue=t.adj, LowerLimits=lower.ci, UpperLimits=upper.ci, 
-                      Pvalue=p.adj)    
-  return(out)
+  out <- data.frame(b=Bs, SE=newSE,  t=t.adj, CI.lower=lower.ci, CI.Upper=upper.ci, 
+                      p=p.adj)
+      
+  return(list(out, modelfit))
 }
 
 ##=== Multivariate Meta-Regression ===##
@@ -740,10 +882,11 @@ MAreg2  <-  function(reg) {  # Multivariate meta-regression
   #sig <- symnum(p.adj,  corr = FALSE,  na = FALSE,  
   #           cutpoints <- c(0,  0.001,  0.01,  0.05,  0.1,  1), 
   #           symbols <- c("***",  "**",  "*",  ".",  " ")) 
-  out  <-  data.frame(Beta=Bs, StdError=newSE,  Tvalue=t.adj, LowerLimits=lower.ci, UpperLimits=upper.ci, 
-                      Pvalue=p.adj)  
+  out  <-  data.frame(b=Bs, SE=newSE,  t=t.adj, CI.lower=lower.ci, CI.Upper=upper.ci, 
+                      p=p.adj)  
   return(out)
 }
+
 
 ##============= GRAPHICS =============##
 
@@ -770,7 +913,9 @@ MAregGraph <- function(meta, mod,  method="random",  modname=NULL,  title=NULL, 
   m$mod <- mod
   compl<-!is.na(m$mod)
   m<-m[compl,]
-  meta <- ddply(m,  .(id),  summarize,  r = aggrs(r), n=mean(n), mod = head(mod,  1))
+  meta <- agg_r2(m,m$mod)
+  meta <- do.call(rbind, lapply(split(meta, meta$id), 
+          function(.data) .data[sample(nrow(.data), 1),]))
   meta$z  <-  0.5*log((1 + meta$r)/(1-meta$r))   
   meta$var.z <- 1/(meta$n-3)
   meta$wi <-  1/meta$var.z
@@ -835,7 +980,7 @@ CatModGraph <- function(meta, mod,  method="random",  modname=NULL,  title=NULL)
   #   modname: Name of moderator to appear on x-axis of plot. Default is NULL.
   #   title: Plot title. Default is NULL.
   # Returns:
-  #   Boxplot graph with median, mean (denoted by '+'), interquartile range, max, min, and 
+  #   Boxplot graph with median, interquartile range, max, min, and 
   #   outliers from a fixed or random effects categorical moderator analysis. Places
   #   jitter points for each study and the size of points are based on study weights--more 
   #   precise studies are larger. The ggplot2 package outputs the 
@@ -844,7 +989,9 @@ CatModGraph <- function(meta, mod,  method="random",  modname=NULL,  title=NULL)
   m$mod <- mod
   compl<-!is.na(m$mod)
   m<-m[compl,]
-  meta <- ddply(m,  .(id),  summarize,  r = aggrs(r), n=mean(n),  mod = head(mod,  1))
+  meta <- agg_r2(m,m$mod)
+  meta <- do.call(rbind, lapply(split(meta, meta$id), 
+          function(.data) .data[sample(nrow(.data), 1),]))
   meta$z  <-  0.5*log((1 + meta$r)/(1-meta$r))   
   meta$var.z <- 1/(meta$n-3)
   meta$wi <-  1/meta$var.z
@@ -872,7 +1019,7 @@ CatModGraph <- function(meta, mod,  method="random",  modname=NULL,  title=NULL)
     catmod <- ggplot(meta,  aes(factor(mod),  z, weight=wi), na.rm=TRUE) + 
     opts(title=title, legend.position="none", na.rm=TRUE) + 
     geom_boxplot(outlier.size=2, na.rm=TRUE) + 
-    geom_jitter(aes(shape=factor(mod), size=wi), alpha=.3) + 
+    geom_jitter(aes(shape=factor(mod), size=wi), alpha=.25) + 
     #theme_bw() + 
     #scale_x_discrete(modname, labels=c("Normal", "At-risk", "Chronic")) + 
     #ylim(-.75, 2.1) + 
@@ -883,7 +1030,7 @@ CatModGraph <- function(meta, mod,  method="random",  modname=NULL,  title=NULL)
   if(method=="random") {
     catmod <- ggplot(meta,  aes(factor(mod),  z, weight=wi.tau), na.rm=TRUE) + 
                     geom_boxplot(outlier.size=2, na.rm=TRUE) + 
-                    geom_jitter(aes(shape=factor(mod), size=wi.tau), alpha=.3) + 
+                    geom_jitter(aes(shape=factor(mod), size=wi.tau), alpha=.25) + 
                     #theme_bw() + 
                     xlab(modname) + 
                     ylab("Effect Size")  + 
@@ -1093,11 +1240,9 @@ Kappa <- function(rater1, rater2)  {
 
 ##====== Additional Functions ========##
 
-# Function to reduce data set with complete data for x predictors in a 
-# multivariate mod analysis
+# Function to reduce data set with complete data for 1 predictor 
 
-ComplData <- function(meta, mod1,  mod2=NULL, mod3=NULL, mod4=NULL, mod5=NULL, 
-                      predictors=1) {   
+ComplData <- function(meta, mod) {   
   # Outputs an aggregated data.frame that will remove any missing data from the data 
   # set. This is particularly useful to output non-missing data based on a specified
   # number of variables (generally in conjunction with the multivariate moderator
@@ -1105,62 +1250,18 @@ ComplData <- function(meta, mod1,  mod2=NULL, mod3=NULL, mod4=NULL, mod5=NULL,
   # Args:
   #   meta: data.frame with r (correlation coefficients) and n (sample size)for each study.
   #   mod1: Moderator variable wanting to be kept for further analysis.    
-  #   mod2: Moderator variable wanting to be kept for further analysis. Default is NULL.
-  #   mod3: Moderator variable wanting to be kept for further analysis. Default is NULL.
-  #   mod4: Moderator variable wanting to be kept for further analysis. Default is NULL.
-  #   mod5: Moderator variable wanting to be kept for further analysis. Default is NULL.
-  #   predictor: Number of mods to keep in reduced data.frame.
   # Returns:
-  #   Reduced data.frame (with complete data) for each moederator entered into the 
-  #   function. This is primarily used as a convenience function for conducting 
+  #   Reduced data.frame (with complete data) for the moderator entered into the 
+  #   function while aggregating based on recommended procedured (Hunter & Schmidt,
+  #   2004). This is primarily used as a convenience function for conducting 
   #   multivariate meta-regressions. 
   m <- meta
-  if(predictors==1) {
-    m$mod1 <- mod1
-    compl <- !is.na(m$mod1)
-    m <- m[compl, ]
-    meta <- ddply(m,  .(id),  summarize,  r = aggrs(r), n=mean(n), mod1 = head(mod1,  1))  # using sample instead of head isnt working as expected
-  }
-  if(predictors==2) {
-    m$mod1 <- mod1
-    m$mod2 <- mod2
-    compl <- !is.na(m$mod1)& !is.na(m$mod2)
-    m <- m[compl, ]
-    meta <- ddply(m,  .(id),  summarize,  r = aggrs(r), n=mean(n), mod1 = head(mod1,  1),  
-                  mod2 = head(mod2,  1) ) 
-  }
-  if(predictors==3) {
-    m$mod1 <- mod1
-    m$mod2 <- mod2
-    m$mod3 <- mod3
-    compl <- !is.na(m$mod1)& !is.na(m$mod2)& !is.na(m$mod3)
-    m <- m[compl, ]
-    meta <- ddply(m,  .(id),  summarize,  r = aggrs(r), n=mean(n), mod1 = head(mod1,  1),  
-                  mod2 = head(mod2,  1), mod3 = head(mod3,  1) ) 
-  }
-  if(predictors==4) {
-    m$mod1 <- mod1
-    m$mod2 <- mod2
-    m$mod3 <- mod3
-    m$mod4 <- mod4
-    compl <- !is.na(m$mod1)& !is.na(m$mod2)& !is.na(m$mod4)& !is.na(m$mod4)
-    m <- m[compl, ]
-    meta <- ddply(m,  .(id),  summarize,  r = aggrs(r), n=mean(n), mod1 = head(mod1,  1),  
-                  mod2 = head(mod2,  1), mod3 = head(mod3,  1), mod4 = head(mod4,  1) ) 
-  }
-  if(predictors==5) {
-    m$mod1 <- mod1
-    m$mod2 <- mod2
-    m$mod3 <- mod3
-    m$mod4 <- mod4
-    m$mod5 <- mod5
-    compl <- !is.na(m$mod1)& !is.na(m$mod2)& !is.na(m$mod4)& !is.na(m$mod4)&
-             !is.na(m$mod5)
-    m <- m[compl, ]
-    meta <- ddply(m,  .(id),  summarize,  r = aggrs(r), n=mean(n), mod1 = head(mod1,  1),  
-                  mod2 = head(mod2,  1), mod3 = head(mod3,  1), mod4 = head(mod4,  1), 
-                  mod5 = head(mod5,  1)  ) 
-  }
+  m$mod <- mod
+  compl <- !is.na(m$mod)
+  m <- m[compl, ]
+  meta <- agg_r2(m,m$mod)
+  meta <- do.call(rbind, lapply(split(meta, meta$id), 
+          function(.data) .data[sample(nrow(.data), 1),]))
   meta$z  <-  0.5*log((1 + meta$r)/(1-meta$r))   
   meta$var.z <- 1/(meta$n-3)
   meta$wi <-  1/meta$var.z
@@ -1268,10 +1369,10 @@ CorAtten <- function (meta, xx, yy)
     m <- meta
     meta$xx <- xx
     meta$yy <- yy
-    meta$r.adj <- ifelse(is.na(meta$xx & meta$yy), meta$r, Rho_TU(meta$r, 
+    meta$r <- ifelse(is.na(meta$xx & meta$yy), meta$r, Rho_TU(meta$r, 
         meta$xx, meta$yy))
-    meta$z <- 0.5 * log((1 + meta$r.adj)/(1 - meta$r.adj))
-    meta$var.r <- ((1 - meta$r.adj^2)^2)/(meta$n - 1)
+    meta$z <- 0.5 * log((1 + meta$r)/(1 - meta$r))
+    meta$var.r <- ((1 - meta$r^2)^2)/(meta$n - 1)
     meta$var.r2 <- ifelse(is.na(m$xx & m$yy), meta$var.r, meta$var.r/(xx * 
         yy))
     meta$var.z <- 1/(meta$n - 3)

@@ -15,20 +15,20 @@ MAreg2(reg)
   
 \code{reg <- lm(data$z ~ data$mod8 + data$mod1, weights= data$wi.tau)}
 
-The outcome variable is a Fishers z and the predictor moderator(s) can be either continuous or categorical. Weight the regression by either the fixed or random effect weight (e.g., fixed equals \code{data$wi} and random equals \code{data$wi.tau}). See \code{ComplData} function to assist in reducing the dataset, if applicable. See Konstantopoulos & Hedges (2009; pp. 289-290) for the computations used in this function.
+The outcome variable used in the initial regression should be a Fishers z (which will be coverted back to r in the final output). The predictors (moderator(s)) can be either continuous or categorical. Weight the regression by either the fixed or random effect weight (e.g., fixed equals \code{data$wi} and random equals \code{data$wi.tau}). See \code{ComplData} function to assist in reducing the dataset, if applicable. See Konstantopoulos & Hedges (2009; pp. 289-290) for the computations used in this function.
 }
 \value{
-\item{Beta}{ Beta coefficient.
+\item{b}{ Unstandardized regression coefficient.
 } 
-\item{StdError}{ Standard Error of coefficient (adjusted value).
+\item{SE}{ Standard error of b coefficient (adjusted SE value).
 }
-\item{Tvalue}{ T-value (adjusted value).
+\item{t}{ t-value (adjusted value).
 }
-\item{LowerLimit}{ Lower 95\% confidence interval.
+\item{CI.Lower}{ Lower 95\% confidence interval.
 }
-\item{UpperLimit}{ Upper 95\% confidence interval.
+\item{CI.Upper}{ Upper 95\% confidence interval.
 }
-\item{P-value}{ Significance level.
+\item{p}{ Significance level.
 }
 }
 \references{Konstantopoulos & Hedges (2009). Analyzing effect sizes: Fixed-effects models. In H. Cooper, L. V. Hedges, & J. C. Valentine (Eds.), \emph{The handbook of research synthesis and meta analysis} (pp. 279-293). New York: Russell Sage Foundation.  

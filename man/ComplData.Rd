@@ -1,30 +1,19 @@
 \name{ComplData}
 \alias{ComplData}
-\title{Complete Dataset (by Moderator(s))
+\title{Complete Dataset)
 }
-\description{ Function to reduce data set with complete data for \emph{x} number of predictors in a multivariate moderator analysis. Will accept a \code{data.frame} with multiple rows per study and reduce the \code{data.frame} to one effect size per study based on recommended aggregation procedures for correlations (Hunter & Schmidt, 2004; pp. 435-8).
+\description{ Function to reduce data set with complete data for 1 predictor. Will accept a \code{data.frame} with multiple rows per study and reduce the \code{data.frame} to one effect size per study based on recommended aggregation procedures for correlations (Hunter & Schmidt, 2004; pp. 435-8).
 }
 \usage{
-ComplData(meta, mod1, mod2 = NULL, mod3 = NULL, mod4 = NULL,
- mod5 = NULL, predictors = 1)
+ComplData(meta, mod)
 }
 \arguments{
-  \item{meta}{ \code{data.frame} with r (correlation coefficients) and n (sample size) for each study.
+  \item{meta}{ \code{data.frame} with r (correlation coefficients) and n (sample size) for each study. The function requires that the column name for the correlation coefficient is 'r' and the sample size is 'n'.
 }
-  \item{mod1}{ Moderator variable wanting to be kept for further analysis. 
-}
-  \item{mod2}{ Moderator variable wanting to be kept for further analysis. Default is NULL.
-}
-  \item{mod3}{ Moderator variable wanting to be kept for further analysis. Default is NULL.
-}
-  \item{mod4}{ Moderator variable wanting to be kept for further analysis. Default is NULL.
-}
-  \item{mod5}{ Moderator variable wanting to be kept for further analysis. Default is NULL.
-}
-  \item{predictors}{ Number of moderators specified in function (to keep in reduced \code{data.frame}).
+  \item{mod}{ Moderator variable wanting to be kept for further analysis. 
 }
 }
-\value{ Reduced \code{data.frame} (with complete data) for each moderator entered into the function. This is primarily used as a convenience function for conducting multivariate meta-regressions or when desiring a complete dataset based on a specified number of variables.
+\value{ Reduced \code{data.frame} (with complete data) for the moderator entered into the function. 
 }
 \author{AC Del Re & William T. Hoyt
 
@@ -40,10 +29,7 @@ data(Data_ch16.1)
 
 # Example
 
-ComplData(temp, temp$mod1, temp$mod2, predictors= 2)
-}
-\seealso{
-\code{\link{MAreg2}}
+ComplData(temp, temp$mod1)
 }
 \keyword{data}
 

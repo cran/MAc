@@ -1,8 +1,8 @@
 \name{Kappa}
 \alias{Kappa}
-\title{Inter-Rater Reliability
+\title{Inter-Rater Agreement
 }
-\description{Kappa coefficients for assessing inter-rater reliability between 2 coders (for categorical \cr
+\description{Kappa coefficients for assessing inter-rater agreement between 2 coders (for categorical \cr
 variables/moderators).
 }
 \usage{

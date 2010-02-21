@@ -15,7 +15,7 @@ CorAtten(meta, xx, yy)
   \item{yy}{ Column for reliability of outcome variable ("dependent variable").
 }
 }
-\value{ \code{data.frame} with a new column for correlations corrected for measurement unreliability (\code{r.adj}), updated standard errors, variance, and study weights based on these corrected values (see Hunter & Schmidt, 2004; pp. 97-98). Studys without reliability information will remain unchanged, as will their standard errors, variances and weights.
+\value{ \code{data.frame} with a column for correlations corrected for measurement unreliability (\code{r}), updated standard errors, variance, and study weights based on these corrected values (see Hunter & Schmidt, 2004; pp. 97-98). Studys without reliability information will remain unchanged, as will their standard errors, variances and weights.
 }
 \author{AC Del Re & William T. Hoyt
 
