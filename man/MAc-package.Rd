@@ -10,12 +10,12 @@
 \tabular{ll}{
 Package: \tab MAc\cr
 Type: \tab Package\cr
-Version: \tab 1.0.4\cr
-Date: \tab 2010-02-14\cr
+Version: \tab 1.0.5\cr
+Date: \tab 2010-03-01\cr
 License: \tab GPL-2\cr
 LazyLoad: \tab yes\cr
 }
-The \code{MAc} package has integrated functions to facilitate the meta-analytic process for correlations at every analytical stage. There are five broad areas of analysis that the \code{MAc} package targets:
+The \code{MAc} package has integrated functions to facilitate the meta-analytic process at nearly every analytical stage. There are five broad areas of analysis that the \code{MAc} package targets:
  
 1. Computations to Calculate Correlations: 
 

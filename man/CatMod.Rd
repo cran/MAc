@@ -51,7 +51,7 @@ CatMod(meta, mod)
 }
 \item{Qb}{ Q-between (measure of between-group heterogeneity)
 }
-\item{df.b)}{ Degrees of freedom for Q-between.
+\item{df.b}{ Degrees of freedom for Q-between.
 }
 \item{p.b}{ Q-between p-value (for homogeneity)
 } 
