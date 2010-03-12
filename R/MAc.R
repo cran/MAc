@@ -1,7 +1,7 @@
 ##==================             MAc             ================##      
 ##==================  Meta-Analysis Correlations ================##
 
-# updated: 02.28.10
+# updated: 03.09.10
 
 # Package created by AC Del Re & William T. Hoyt
 # This package contains all the relevant functions to conduct a
@@ -67,6 +67,246 @@ MRfit <- function( ...) {
 #                         c("GSI", "SCL", "BSI")="SCL"; c("dropout")="Dropout"; 
 #                         else= "Other"')    
 
+##============ COMPUTATIONS TO CALCULATE EFFECT SIZES ================##
+
+# Formulas for computing d, var(d), g (bias removed from d), and var(g)
+# in designs with independent groups.
+# Section 12.3.1 & Table 12.1 (Cooper et al., 2009; pp. 226-228)
+
+# Computing d and g, independent groups
+# (12.3.1) Study reported: 
+# m.1 (post-test mean of treatment), m.2 (post-test mean of comparison),
+# sd.1 (treatment standard deviation at post-test), sd.2 (comparison 
+# standard deviation at post-test), n.1 (treatment), n.2 (comparison/control).
+
+d_to_g <- function(d, var.d, n.1, n.2) {
+  df<- (n.1+n.2)-2
+  j<-1-(3/(4*df-1))
+  g<-j*d
+  var.g<-j^2*var.d
+  out<-cbind(g, var.g)
+  return(out)
+}
+
+mean_to_d <- function(m.1,m.2,sd.1,sd.2,n.1, n.2) {
+  s.within<-sqrt(((n.1-1)*sd.1^2+(n.2-1)*sd.2^2)/(n.1+n.2-2))
+  d<-(m.1-m.2)/s.within
+  var.d<-(n.1+n.2)/(n.1*n.2)+ (d^2)/(2*(n.1+n.2))
+  out<-cbind(d,var.d)
+  return(out)
+}
+
+# (1) Study reported: 
+# m.1 (post-test mean of treatment), m.2 (post-test mean of comparison),
+# s.pooled (pooled standard deviation), n.1 (treatment), 
+# n.2 (comparison/control).
+
+mean_to_d2 <- function(m.1,m.2,s.pooled,n.1, n.2) {
+  d<-(m.1-m.2)/s.pooled
+  var_d<-(n.1+n.2)/(n.1*n.2)+ (d^2)/(2*(n.1+n.2))
+  out<-cbind(d,var_d)
+  return(out)
+}
+
+# (2) Study reported: 
+# t (t-test value of treatment v comparison), n.1 (treatment),
+# n.2 (comparison/control).
+
+t_to_d <- function(t, n.1, n.2) {
+  d<-t*sqrt((n.1+n.2)/(n.1*n.2))
+  var_d<-(n.1+n.2)/(n.1*n.2)+ (d^2)/(2*(n.1+n.2))
+  out<-cbind(d,var_d)
+  return(out)
+}
+
+# (3) Study reported: 
+# f (F-test value of treatment v comparison), n.1 (treatment),
+# n.2 (comparison/control).
+
+
+f_to_d <- function(f,n.1, n.2) {
+  d<-sqrt(f*(n.1+n.2)/(n.1*n.2))
+  var_d<-(n.1+n.2)/(n.1*n.2)+ (d^2)/(2*(n.1+n.2))
+  out<-cbind(d,var_d)
+  return(out)
+}
+
+# (4) Study reported: 
+# p-value (for ONE-tailed test), n.1 (treatment), n.2 (comparison/control).
+
+p_to_d1 <- function(p, n.1, n.2) {
+  pxtwo<-p*2
+  df<-(n.1+n.2)-2  
+  TINV<-qt((1-pxtwo/2),df)
+  d<-TINV*sqrt((n.1+n.2)/(n.1*n.2))
+  var_d<-(n.1+n.2)/(n.1*n.2)+ (d^2)/(2*(n.1+n.2))
+  out<-cbind(d,var_d)
+  return(out)
+}
+
+# (5) Study reported: 
+# p-value (for TWO-tailed test), n.1 (treatment), n.2 (comparison/control).
+
+p_to_d2 <- function(p, n.1, n.2) {
+  df<-(n.1+n.2)-2  
+  TINV<-qt((1-p/2),df)
+  d<-TINV*sqrt((n.1+n.2)/(n.1*n.2))
+  var_d<-(n.1+n.2)/(n.1*n.2)+ (d^2)/(2*(n.1+n.2))
+  out<-cbind(d,var_d)
+  return(out)
+}
+
+# rtod converts Pearson r to Cohen's d (also retains (N-1)/N).
+r_to_d <- function(r, N) { 2*r*sqrt((N-1)/(N*(1-r^2)))*abs(r)/r    }
+
+# Formulas for computing d and var(d) in designs with independent groups
+# using ANCOVA. Section 12.3.3 & Table 12.3 (Cooper et al., 2009; pp. 228-230).
+
+# Computing d and g from ANCOVA
+# (12.3.3) Study reported: 
+# m.1.adj (adjusted mean of treatment from ANCOVA),
+# m.2.adj (adjusted mean of comparison/control from ANCOVA),
+# sd.adj (adjusted standard deviation), n.1 (treatment),
+# n.2 (comparison/control), R (covariate outcome correlation or multiple
+# correlation), q (number of covariates).
+
+ancova_to_d1 <- function(m.1.adj,m.2.adj,sd.adj,n.1, n.2, R, q) {
+  s.within<-sd.adj/sqrt(1-R^2)
+  d<-(m.1.adj-m.2.adj)/s.within
+  var_d<-((n.1+n.2)*(1-R^2))/(n.1*n.2)+ (d^2)/(2*(n.1+n.2))
+  out<-cbind(d,var_d)
+  return(out)
+}
+
+
+# Table 12.3 (1) Study reported: 
+# m.1.adj (adjusted mean of treatment from ANCOVA),
+# m.2.adj (adjusted mean of comparison/control from ANCOVA),
+# s.pooled (pooled standard deviation), n.1 (treatment), 
+# n.2 (comparison/control), R (covariate outcome correlation or multiple
+# correlation), q (number of covariates).
+
+ancova_to_d2 <- function(m.1.adj, m.2.adj, s.pooled, n.1, n.2, R, q) {
+  d<-(m.1.adj-m.2.adj)/s.pooled
+  var_d<-((n.1+n.2)*(1-R^2))/(n.1*n.2)+ (d^2)/(2*(n.1+n.2))
+  out<-cbind(d,var_d)
+  return(out)
+}
+
+# (2) Study reported: 
+# t (t-test value from ANCOVA), n.1 (treatment),
+# n.2 (comparison/control), R (covariate outcome correlation or multiple
+# correlation), q (number of covariates).
+
+tt.ancova_to_d <- function(t, n.1, n.2, R, q) {
+  d<-t*sqrt((n.1+n.2)/(n.1*n.2))*sqrt(1-R^2)
+  var_d<-((n.1+n.2)*(1-R^2))/(n.1*n.2)+ (d^2)/(2*(n.1+n.2))
+  out<-cbind(d,var_d)
+  return(out)
+}
+
+# (3) Study reported: 
+# f (F-test value from ANCOVA), n.1 (treatment),
+# n.2 (comparison/control),R (covariate outcome correlation or multiple
+# correlation), q (number of covariates).
+
+f.ancova_to_d<-function(f,n.1, n.2, R, q) {
+  d<-sqrt(f*(n.1+n.2)/(n.1*n.2))*sqrt(1-R^2)
+  var_d<-((n.1+n.2)*(1-R^2))/(n.1*n.2)+ (d^2)/(2*(n.1+n.2))
+  out<-cbind(d,var_d)
+  return(out)
+}
+
+# (4) Study reported: 
+# p-value (for ONE-tailed test, from ANCOVA), n.1 (treatment), 
+# n.2 (comparison/control), R (covariate outcome correlation or multiple
+# correlation), q (number of covariates).
+
+p.ancova_to_d1 <- function(p, n.1, n.2, R, q) {
+  pxtwo<-p*2
+  df<-(n.1+n.2)-2  
+  TINV<-qt((1-pxtwo/2),df)
+  d<-TINV*sqrt((n.1+n.2)/(n.1*n.2))*sqrt(1-R^2)
+  var_d<-((n.1+n.2)*(1-R^2))/(n.1*n.2)+ (d^2)/(2*(n.1+n.2))
+  out<-cbind(d,var_d)
+  return(out)
+}
+
+# (5) Study reported: 
+# p-value (for TWO-tailed test, from ANCOVA), n.1 (treatment), 
+# n.2 (comparison/control), R (covariate outcome correlation or multiple
+# correlation), q (number of covariates).
+
+p.ancova_to_d2 <- function(p, n.1, n.2, R, q) {
+  df<-(n.1+n.2)-2  
+  TINV<-qt((1-p/2),df)
+  d<-TINV*sqrt((n.1+n.2)/(n.1*n.2))*sqrt(1-R^2)
+  var_d<-((n.1+n.2)*(1-R^2))/(n.1*n.2)+ (d^2)/(2*(n.1+n.2))
+  out<-cbind(d,var_d)
+  return(out)
+}
+
+# computing d from odds ratio
+
+or_to_d <- function(or) {
+  lor <- log(or)
+  d <- lor*sqrt(3)/pi
+  out <- cbind(lor, d)
+  return(out)
+}  
+
+# computing d from log odds ratio
+
+lor_to_d <- function(lor, var.lor) {
+  d <- lor*sqrt(3)/pi
+  var.d <- 3*var.lor/pi^2
+  out <- cbind(d, var.d)
+  return(out)
+}  
+
+# compute or from proportions
+
+prop_to_or <- function(p1, p2, n.ab, n.cd) {
+  or <-(p1*(1-p2))/(p2*(1-p1))
+  lor <- log(or)
+  var.lor <- 1/(n.ab*p1*(1-p1))+1/(n.cd*p2*(1-p2))
+  out <- cbind(or,lor,var.lor)
+  return(out)
+}
+
+prop_to_d <-function(p1, p2, n.ab, n.cd) {
+  or <-(p1*(1-p2))/(p2*(1-p1))
+  lor <- log(or)
+  var.lor <- 1/(n.ab*p1*(1-p1))+1/(n.cd*p2*(1-p2))
+  d <- lor*sqrt(3)/pi
+  var.d <- 3*var.lor/pi^2
+  out <- cbind(or,lor,var.lor, d, var.d)
+  return(out)
+}
+
+# Odds Ratio to d: if have info for 'failure' in both conditions 
+# (B = # tmt failure; D = # non-tmt failure) and the sample size
+# for each group (n.1 & n.2 respectively):
+
+fail_to_d <- function(B, D, n.1, n.0) {
+  A <- n.1 - B  # tmt success
+  B <- B        # tmt failure
+  C <- n.0 - D  # non-tmt success
+  D <- D        # non-tmt failure
+  p1 <- A/n.1   # proportion 1 
+  p2 <- C/n.0   # proportion 2
+  n.ab <-  A+B  # n of A+B
+  n.cd <-  C+D  # n of C+D        
+  or <- (p1 * (1 - p2))/(p2 * (1 - p1))  # odds ratio
+  lor <- log(or)  # log odds ratio
+  var.lor <-  1/A + 1/B + 1/C + 1/D  # variance of log odds ratio
+  #var.lor <- 1/(n.ab*p1*(1-p1))+1/(n.cd*p2*(1-p2))
+  d <- lor * sqrt(3)/pi  # conversion to d
+  var.d <- 3 * var.lor/pi^2  # variance of d
+  out <- cbind(or, lor, var.lor, d, var.d)
+  return(out)
+}
+
 ##============ COMPUTATIONS TO CALCULATE CORRELATIONS ================##
 
 # Formulas for computing r in designs with independent groups. 
@@ -78,7 +318,10 @@ var_r <-  function(r, n) ((1 - r^2)^2)/(n - 1)  #calulate variance of r
 r_to_z  <-  function(r) 0.5*log((1 + r)/(1 - r))  #convert to z' 
 var_z <- function(n) 1 / (n - 3)  #variance of z'
 
-# (2) Study reported: 
+# Formulas for computing r in designs with independent groups. 
+# Section 12.4 & Table 12.4 (Cooper et al., 2009; pp. 231-234).
+
+# (1) Study reported: 
 # t (t-test value of differences between 2 groups), n (total sample size)
 
 r_from_t <- function(t, n) {
@@ -112,7 +355,6 @@ r_from_d1 <- function(d,  n.1, n.2,  var.d) {
 
 r_from_chi <- function(chi.sq,  n) sqrt(chi.sq/n)
 
-
 ##============ WITHIN STUDY AGGREGATION OF EFFECT SIZES =============##
 
 # Functions for aggregating within-study effect sizes (accounting for dependencies).
@@ -134,7 +376,7 @@ aggrs <- function(r) {
 # Required inputs are data.frame with r (correlation coefficients) and n (sample size)
 
 agg_r <- function(meta) {
-  agg <- with(meta,  aggregate(list(r = r),  by = list(id = id),  aggrs))
+  agg <- with(meta,  aggregate(list(r = r),  by = list(id = id), aggrs))
   ns <- with(meta,  aggregate(list(n = n),  by = list(id = id),  mean))
   ns$n <- round(ns$n, 0)
   agg.data  <-  merge(agg,  ns,  by='id') 
@@ -259,9 +501,9 @@ OmnibusES<-  function(meta,  var="weighted" ) {
     upper.ci.tau <- (exp(2*upper.ci.Tz.tau)-1)/(exp(2*upper.ci.Tz.tau) + 1)
   }
   if(var == "unweighted") {  # unweighted variance method
-    var.Tz.agg <- (sum(meta$z^2)-sum(meta$z)^2/k)/(k-1) #14.20
+    var.agg <- (sum(meta$z^2)-sum(meta$z)^2/k)/(k-1) #14.20
     q.num <- (1/k)*sum(meta$var.z)                                   
-    unwgtvar.Tz.agg.tau <- var.Tz.agg-q.num  #14.22
+    unwgtvar.Tz.agg.tau <- var.agg-q.num  #14.22
     var.Tz.agg.tau <-  ifelse(unwgtvar.Tz.agg.tau <= 0, 0, unwgtvar.Tz.agg.tau)  #if var < 0,  its set to 0
     se.Tz.agg.tau <- sqrt(var.Tz.agg.tau)
     z.valueR  <-  Tz.agg.tau/se.Tz.agg.tau
@@ -827,7 +1069,7 @@ MAreg1 <- function(meta, mod, method="random") {  # Single predictor meta-regres
   Q <- sum.wiTi2-(sum.wiTi^2)/sum.wi                         
   k <- sum(!is.na(meta$r))                                  
   df <- k-1      
-  tau <- (Q-k + 1)/comp  # random effects variance
+  tau <- (Q-(k - 1))/comp  # random effects variance
   meta$var.tau <- meta$var.z + tau
   meta$wi.tau <- 1/meta$var.tau
   meta$wiTi.tau <- meta$wi.tau*meta$z
@@ -987,11 +1229,11 @@ MAregGraph <- function(meta, mod,  method="random",  modname=NULL,  title=NULL, 
 
 stat_sum_single1  <-  function(fun,  geom="point",  weight=wi, ...) {
                                stat_summary(fun.y=fun,  shape=" + ",
-                               geom=geom,  size = 5,  ...)      
+                               geom=geom,  size = 7,  ...)      
 }
 stat_sum_single2  <-  function(fun,  geom="point",  weight=wi.tau, ...) {
                                stat_summary(fun.y=fun,  shape=" + ",  
-                               geom=geom,  size = 5,  ...)      
+                               geom=geom,  size = 7,  ...)      
 }
 
 CatModGraph <- function(meta, mod,  method="random",  modname=NULL,  title=NULL) {
@@ -1041,15 +1283,14 @@ CatModGraph <- function(meta, mod,  method="random",  modname=NULL,  title=NULL)
   #meta <- meta[!is.na(mod), ] 
   if(method=="fixed") {
     catmod <- ggplot(meta,  aes(factor(mod),  z, weight=wi), na.rm=TRUE) + 
-    opts(title=title, legend.position="none", na.rm=TRUE) + 
-    geom_boxplot(outlier.size=2, na.rm=TRUE) + 
-    geom_jitter(aes(shape=factor(mod), size=wi), alpha=.25) + 
-    #theme_bw() + 
-    #scale_x_discrete(modname, labels=c("Normal", "At-risk", "Chronic")) + 
-    #ylim(-.75, 2.1) + 
-    xlab(modname) + 
-   ylab("Effect Size")  + 
-   stat_sum_single1(mean)
+                    geom_boxplot(outlier.size=2, na.rm=TRUE) + 
+                    geom_jitter(aes(shape=factor(mod), size=wi.tau), alpha=.25) + 
+                    #theme_bw() + 
+                    xlab(modname) + 
+                    ylab("Effect Size")  + 
+                    opts(title=title, legend.position="none", na.rm=TRUE) + 
+                    stat_sum_single2(mean)
+
   }  
   if(method=="random") {
     catmod <- ggplot(meta,  aes(factor(mod),  z, weight=wi.tau), na.rm=TRUE) + 
@@ -1078,8 +1319,7 @@ ForestPlot <- function(meta, method="random", title=NULL) {
   #   where size of point is based on the study's precision (based primarily on 
   #   sample size) and 95% confidence intervals. The ggplot2 package outputs the rich graphics.  
   meta <- meta 
-  meta$id <- as.character(meta$id)                                  
-  #meta <- ddply(m,  .(id),  summarize,  r = aggrs(r), n=mean(n))
+  meta$id <- factor(meta$id)  # , levels=rev(id))
   meta$z  <-  0.5*log((1 + meta$r)/(1-meta$r))   
   meta$var.z <- 1/(meta$n-3)
   meta$wi <-  1/meta$var.z
@@ -1104,7 +1344,7 @@ ForestPlot <- function(meta, method="random", title=NULL) {
      meta$u.ci95z <- meta$z + 1.96*sqrt(meta$var.z)
      meta$l.ci95 <- (exp(2*meta$l.ci95z)-1)/(exp(2*meta$l.ci95z) + 1)
      meta$u.ci95 <- (exp(2*meta$u.ci95z)-1)/(exp(2*meta$u.ci95z) + 1)
-     forest <- ggplot(meta,  aes(y = factor(id, levels=rev(levels(id))),  x = r))  +  
+     forest <- ggplot(meta,  aes(y = id, x=r))+    #aes(y = factor(id, levels=rev(levels(id))),  x = r))  +  
                     geom_vline(xintercept=0) + 
                     geom_point(data=omnibus, colour="red", size=8, shape=23) + 
                     geom_point(aes(size=wi)) + 
@@ -1139,7 +1379,7 @@ ForestPlot <- function(meta, method="random", title=NULL) {
     meta$u.ci95z <- meta$z + 1.96*sqrt(meta$var.z)
     meta$l.ci95 <- (exp(2*meta$l.ci95z)-1)/(exp(2*meta$l.ci95z) + 1)
     meta$u.ci95 <- (exp(2*meta$u.ci95z)-1)/(exp(2*meta$u.ci95z) + 1)
-    forest <- ggplot(meta,  aes(y = factor(id, levels=rev(levels(id))),  x = r))  +  #factor(id, levels=rev(levels(id)))
+    forest <- ggplot(meta,  aes(y = id,x = r))+    #aes(y = factor(id, levels=rev(levels(id))),  x = r))  +  
                   geom_vline(xintercept=0) + 
                   geom_point(data=omnibus.tau, colour="red",  size=8,  shape=23) + 
                   geom_point(aes(size=wi.tau)) + 
@@ -1231,6 +1471,109 @@ FunnelPlot <- function(meta, method="random",  title=NULL) {
   return(funnel)
 }
 
+##== Multivariate Moderator Graphs ==##
+
+MultiModGraph <- function(meta, conmod,  catmod, method="random",  
+                          conmod.name=NULL,  title=NULL) {
+  # Outputs a scatterplot and boxplot faceted by the categorical moderator from a 
+  # fixed or random effects moderator analysis. Computations derived from chapter 
+  # 14 and 15, Cooper et al. (2009). 
+  # Args:
+  #   meta: data.frame with r (correlation coefficients) and n (sample size)for each study.
+  #   conmod: Continuous moderator variable used for analysis.
+  #   catmod: Categorical moderator variable used for analysis.    
+  #   method: Model used, either "random" or "fixed" effects. Default is "random".
+  #   conmod.name: Name of continuous moderator variable to appear on x-axis of plot. 
+  #   Default is NULL.
+  #   title: Plot title. Default is NULL.
+  # Returns:
+  #   Multivariate moderator scatterplot graph faceted by categorical moderator levels. Also
+  #   places a weighted regression line based on either a fixed or random effects analysis. 
+  #   The ggplot2 packages outputs the rich graphics.  
+  m <- meta
+  m$conmod <- conmod
+  m$catmod <- catmod
+  compl <- !is.na(m$conmod)& !is.na(m$catmod)
+  meta <- m[compl, ]
+  meta$z  <-  0.5*log((1 + meta$r)/(1-meta$r))   
+  meta$var.z <- 1/(meta$n-3)
+  meta$wi <-  1/meta$var.z
+  meta$wiTi <- meta$wi*meta$z
+  meta$wiTi2 <- meta$wi*(meta$z)^2
+  meta$k <- length(meta$mod)
+  mod <- meta$mod
+  sum.wi <- sum(meta$wi, na.rm=TRUE)    
+  sum.wi2 <- sum(meta$wi2, na.rm=TRUE)
+  sum.wiTi <- sum(meta$wiTi, na.rm=TRUE)    
+  sum.wiTi2 <- sum(meta$wiTi2, na.rm=TRUE)
+  comp <- sum.wi-sum.wi2/sum.wi
+  Q <- sum.wiTi2-(sum.wiTi^2)/sum.wi                         
+  k <- sum(!is.na(meta$r))                                  
+  df <- k-1      
+  tau <- (Q-k + 1)/comp 				
+  meta$var.tau <- meta$var.z + tau
+  meta$wi.tau <- 1/meta$var.tau
+  meta$wiTi.tau <- meta$wi.tau*meta$z
+  meta$wiTi2.tau <- meta$wi.tau*(meta$z)^2
+  if(method=="fixed") {
+    multimod <- ggplot(meta, aes(conmod, z, weight=wi), na.rm=TRUE) + 
+                       opts(title=title, legend.position="none", na.rm=TRUE) + 
+                       facet_wrap(~catmod)  + 
+                       geom_point( aes(size=wi, shape=catmod)) + 
+                       geom_smooth(aes(group=1, weight=wi),
+                                   method= lm, se=FALSE, na.rm=TRUE) +
+                       ylab("Effect Size") + 
+                       xlab(conmod.name)
+  }  
+  if(method=="random") {
+    multimod <- ggplot(meta, aes(conmod, z, weight=wi.tau), na.rm=TRUE) + 
+                              opts(title=title, legend.position="none", na.rm=TRUE) + 
+                              facet_wrap(~catmod)  + 
+                              geom_point(aes(size=wi.tau, shape=catmod)) + 
+                              geom_smooth(aes(group=1, weight=wi.tau), 
+                                          method = lm, se = FALSE,  na.rm=TRUE) + 
+                              ylab("Effect Size") + 
+                              xlab(conmod.name)
+  }
+  return(multimod)
+}
+
+##===================== PUBLICATION BIAS ===================##
+# Three approaches to assess for publication bias: (1) Fail
+# Safe N, (2) Trim & Fill, and (3) Selection Modeling.
+
+# Fail Safe N provides an estimate of the number of missing studies that 
+# would need to exist to overturn the current conclusions.
+
+PubBias <- function(meta, method = "fail.safe") {
+  if(method == "fail.safe") {
+    k <- length(meta$z.score)
+    sum.z <- sum(meta$z.score)
+    Z <- sum.z/sqrt(k)
+    k0 <- round(-k + sum.z^2/(1.96)^2, 0)
+    n.miss.per <- round(k0/k, 0)
+  }
+  out <- list("Fail.safe"=cbind(k,Z,k0, k.per))
+  return(out)
+}
+
+##===================== PUBLICATION BIAS ===================##
+# Three approaches to assess for publication bias: (1) Fail
+# Safe N, (2) Trim & Fill, and (3) Selection Modeling.
+
+# Fail Safe N provides an estimate of the number of missing studies that 
+# would need to exist to overturn the current conclusions.
+
+PubBias <- function(meta) {
+  k <- length(meta$z.score)
+  sum.z <- sum(meta$z.score)
+  Z <- sum.z/sqrt(k)
+  k0 <- round(-k + sum.z^2/(1.96)^2, 0)
+  k.per <- round(k0/k, 0)
+  out <- list("Fail.safe"=cbind(k,Z,k0, k.per))
+  return(out)
+}
+
 ##================== INTERRATER RELIABILITY ================##
 
 # Kappa coefficients for inter-rater reliability (categorical variables)
@@ -1314,74 +1657,6 @@ ComplData <- function(meta, mod, type= "independent") {
   return(meta)
 }
          
-##====== Multivariate Moderator Graphs ======##
-
-
-MultiModGraph <- function(meta, conmod,  catmod, method="random",  
-                          conmod.name=NULL,  title=NULL) {
-  # Outputs a scatterplot and boxplot faceted by the categorical moderator from a 
-  # fixed or random effects moderator analysis. Computations derived from chapter 
-  # 14 and 15, Cooper et al. (2009). 
-  # Args:
-  #   meta: data.frame with r (correlation coefficients) and n (sample size)for each study.
-  #   conmod: Continuous moderator variable used for analysis.
-  #   catmod: Categorical moderator variable used for analysis.    
-  #   method: Model used, either "random" or "fixed" effects. Default is "random".
-  #   conmod.name: Name of continuous moderator variable to appear on x-axis of plot. 
-  #   Default is NULL.
-  #   title: Plot title. Default is NULL.
-  # Returns:
-  #   Multivariate moderator scatterplot graph faceted by categorical moderator levels. Also
-  #   places a weighted regression line based on either a fixed or random effects analysis. 
-  #   The ggplot2 packages outputs the rich graphics.  
-  m <- meta
-  m$conmod <- conmod
-  m$catmod <- catmod
-  compl <- !is.na(m$conmod)& !is.na(m$catmod)
-  meta <- m[compl, ]
-  meta$z  <-  0.5*log((1 + meta$r)/(1-meta$r))   
-  meta$var.z <- 1/(meta$n-3)
-  meta$wi <-  1/meta$var.z
-  meta$wiTi <- meta$wi*meta$z
-  meta$wiTi2 <- meta$wi*(meta$z)^2
-  meta$k <- length(meta$mod)
-  mod <- meta$mod
-  sum.wi <- sum(meta$wi, na.rm=TRUE)    
-  sum.wi2 <- sum(meta$wi2, na.rm=TRUE)
-  sum.wiTi <- sum(meta$wiTi, na.rm=TRUE)    
-  sum.wiTi2 <- sum(meta$wiTi2, na.rm=TRUE)
-  comp <- sum.wi-sum.wi2/sum.wi
-  Q <- sum.wiTi2-(sum.wiTi^2)/sum.wi                         
-  k <- sum(!is.na(meta$r))                                  
-  df <- k-1      
-  tau <- (Q-k + 1)/comp 				
-  meta$var.tau <- meta$var.z + tau
-  meta$wi.tau <- 1/meta$var.tau
-  meta$wiTi.tau <- meta$wi.tau*meta$z
-  meta$wiTi2.tau <- meta$wi.tau*(meta$z)^2
-  if(method=="fixed") {
-    multimod <- ggplot(meta, aes(conmod, z, weight=wi), na.rm=TRUE) + 
-                       opts(title=title, legend.position="none", na.rm=TRUE) + 
-                       facet_wrap(~catmod)  + 
-                       geom_point( aes(size=wi, shape=catmod)) + 
-                       geom_smooth(aes(group=1, weight=wi),
-                                   method= lm, se=FALSE, na.rm=TRUE) +
-                       ylab("Effect Size") + 
-                       xlab(conmod.name)
-  }  
-  if(method=="random") {
-    multimod <- ggplot(meta, aes(conmod, z, weight=wi.tau), na.rm=TRUE) + 
-                              opts(title=title, legend.position="none", na.rm=TRUE) + 
-                              facet_wrap(~catmod)  + 
-                              geom_point(aes(size=wi.tau, shape=catmod)) + 
-                              geom_smooth(aes(group=1, weight=wi.tau), 
-                                          method = lm, se = FALSE,  na.rm=TRUE) + 
-                              ylab("Effect Size") + 
-                              xlab(conmod.name)
-  }
-  return(multimod)
-}
-
 
 # Correction for Attenuation
 

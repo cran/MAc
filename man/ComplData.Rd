@@ -1,6 +1,6 @@
 \name{ComplData}
 \alias{ComplData}
-\title{Complete Dataset)
+\title{Complete Dataset
 }
 \description{ Function to reduce data set with complete data for 1 predictor. Will accept a \code{data.frame} with multiple rows per study and reduce the \code{data.frame} to one effect size per study based on recommended aggregation procedures for correlations (Hunter & Schmidt, 2004; pp. 435-8).
 }

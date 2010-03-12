@@ -4,14 +4,14 @@
 \docType{package}
 \title{Meta-Analysis with Correlations
 }
-\description{ This package contains all the relevant functions to conduct a correlational meta-analysis using recommended procedures as described in \emph{The Handbook of Research Synthesis and Meta-Analysis} (Cooper, Hedges, and Valentine, 2009). The goal in creating this package was to provide a variety of user-friendly functions to assist researchers in the process of conducting a meta-analysis, from the initial to final stages of their analytic endeavor. The meta-analyst can begin their project by using \code{MAc} functions to derive correlation coefficents from the primary studies, when statistics other than correlations are reported (e.g., t-test, p-value, or Cohen's d). Then, the analyst can aggregate all within-study effect sizes (while accounting for within-study dependencies) based on recommended procedures by Hunter & Schmidt (2004), calculate omnibus effect sizes under a fixed and random effects model, and assess for significant moderators (categorical and continuous, single and multi-predictor models) in the dataset. Finally, the meta-analyst can use one of several user-friendly graphics functions to visually represent their data in an elegant manner. 
+\description{ This package contains variety of functions relevant to conducting a correlational meta-analysis using recommended procedures as described in \emph{The Handbook of Research Synthesis and Meta-Analysis} (Cooper, Hedges, and Valentine, 2009). The goal in creating this package was to provide a variety of user-friendly functions to assist researchers in the process of conducting a meta-analysis, from the initial to final stages of their analytic endeavor. The meta-analyst can begin their project by using \code{MAc} functions to derive correlation coefficents from the primary studies, when statistics other than correlations are reported (e.g., t-test, p-value, or Cohen's d). Then, the analyst can aggregate all within-study effect sizes (while accounting for within-study correlations among outcome measures and eliminating any dependencies in the dataset) based on recommended procedures by Hunter & Schmidt (2004), calculate omnibus effect sizes under a fixed and random effects model, and assess for significant moderators (categorical and continuous, single and multi-predictor models) in the dataset. Finally, the meta-analyst can use one of several user-friendly graphics functions to visually represent their data in an elegant manner. 
 }
 \details{
 \tabular{ll}{
 Package: \tab MAc\cr
 Type: \tab Package\cr
-Version: \tab 1.0.5\cr
-Date: \tab 2010-03-01\cr
+Version: \tab 1.0.6\cr
+Date: \tab 2010-03-12\cr
 License: \tab GPL-2\cr
 LazyLoad: \tab yes\cr
 }
@@ -51,12 +51,12 @@ Wampold, B. E., Mondin, G. W., Moody, M., Stich, F., Benson, K., & Ahn, H. (1997
 \examples{ 
 # Examples for each broad area:
 
-id<-rep(1:20)
+id<-1:20
 n<-c(10,20,13,22,28,12,12,36,19,12,36,75,33,121,37,14,40,16,14,20)
 r<-c(.68,.56,.23,.64,.49,-.04,.49,.33,.58,.18,-.11,.27,.26,.40,.49,
  .51,.40,.34,.42,.16)
 mod1<-c(1,2,3,4,1,2,8,7,5,3,9,7,5,4,3,2,3,5,7,1)
-data<-data.frame(id,n,r,mod1)  
+datas<-data.frame(id,n,r,mod1)  
 
 # 1. Computations to Calculate Correlations:
  
@@ -70,27 +70,32 @@ r_from_t (1.74, 30)
 
 # 2. Within-Study Aggregation of Effect Sizes: 
 
-MetaR(data)  
+MetaR(datas)  
 
 # where data = data.frame with columns for r and n with multiple rows per
 # study. Outputs an aggregated data.frame with 1 effect size per study 
 
 # 3. Fixed and Random Effects Omnibus Analysis
 
-OmnibusES(data) 
+OmnibusES(datas) 
 
 # where data = data.frame with columns for r and n
  
 # 4. Moderator Analyses:
 
-MAreg1(data, data$mod1) 
+MAreg1(datas, datas$mod1) 
  
-# where data = data.frame with columns for r and n. data$mod1 = moderator
+# where datas = data.frame with columns for r and n. data$mod1 = moderator
 # variable of interest.
 
 # 5. Graphics:
 
-MAregGraph(data, data$mod1)  
+MAregGraph(datas, datas$mod1)  
 
 # same as above but will output a meta-regression graph
+}
+\seealso{
+\bold{MAc} package:  \url{http://CRAN.R-project.org/package=RcmdrPlugin.MAc}
+\bold{MAd} package:  \url{http://CRAN.R-project.org/package=MAd}
+\bold{MAd} package:  \url{http://CRAN.R-project.org/package=RcmdrPlugin.MAd}
 }
