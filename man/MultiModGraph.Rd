@@ -38,11 +38,11 @@ r<-c(.68,.56,.23,.64,.49,-.04,.49,.33,.58,.18,-.11,.27,.26,.40,.49,
  .51,.40,.34,.42,.16)
 mod1<-c(1,2,3,4,1,2,8,7,5,3,9,7,5,4,3,2,3,5,7,1)
 mod2<-factor(c(rep(c(1,2,3,4),5)))   
-data<-data.frame(id,n,r,mod1, mod2)
+datas<-data.frame(id,n,r,mod1, mod2)
 
 # Example
 
-MultiModGraph(data, conmod = data$mod1, catmod = data$mod2)
+\dontrun{MultiModGraph(datas, conmod = datas$mod1, catmod = datas$mod2)}
 }
 \keyword{ aplot }
 

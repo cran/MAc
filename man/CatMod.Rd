@@ -39,6 +39,8 @@ CatMod(meta, mod)
 }
 \item{df}{ Degrees of freedom for Q-statistic.
 }
+\item{p.h}{p-value for homogeneity within that level of the moderator. 
+}
 \item{I2}{ Proportion of total variation in effect size that is due to heterogeneity rather than chance (see Shadish & Haddock, 2009; pp. 263).
 }
 \item{Q}{ Q-statistic (measure of homogeneity).
@@ -47,13 +49,13 @@ CatMod(meta, mod)
 }
 \item{df.w}{ Degrees of freedom for Q-within.
 }
-\item{p.w}{ Q-within p-value (for homogeneity)
+\item{p.w}{ Q-within p-value (for homogeneity).
 }
-\item{Qb}{ Q-between (measure of between-group heterogeneity)
+\item{Qb}{ Q-between (measure of between-group heterogeneity).
 }
 \item{df.b}{ Degrees of freedom for Q-between.
 }
-\item{p.b}{ Q-between p-value (for homogeneity)
+\item{p.b}{ Q-between p-value (for homogeneity).
 } 
 }
 \references{Konstantopoulos & Hedges (2009). Analyzing effect sizes: Fixed-effects models. In H. Cooper, L. V. Hedges, & J. C. Valentine (Eds.), \emph{The handbook of research synthesis and meta analysis} (pp. 279-293). New York: Russell Sage Foundation.  

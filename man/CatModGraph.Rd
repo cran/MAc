@@ -43,7 +43,7 @@ datas<-data.frame(id,n,r,mod1)
 
 # Example
 
-CatModGraph(datas,datas$mod1)
+\dontrun{CatModGraph(datas,datas$mod1)}
 }   
 \keyword{aplot}
 

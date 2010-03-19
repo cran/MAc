@@ -6,10 +6,13 @@
 Computes within-study aggregation (see Hunter & Schmidt, 2004) and adds fixed and random effects weights for each study in the meta-analysis.
 }
 \usage{
-MetaR(meta)
+MetaR(meta, cor = .50)
 }
 \arguments{
-  \item{meta}{\code{data.frame} with r (correlation coefficients) and n (sample size) for each study.}
+  \item{meta}{\code{data.frame} with r (correlation coefficients) and n (sample size) for each study.
+}
+\item{cor}{Estimated correlation among within-study outcome variables. Default is .50 based on Wampold et al. recommended procedures (1997).
+}
 }
 \value{Outputs a \code{data.frame} with aggregated effect sizes where each study is reduced to one row per study by a weighted average formula. This formula is based on Hunter and Schmidt's (2004) approach to aggregation of dependent effect sizes for correlations (see chapter 10, pp. 435-8). Further, this function will add all necessary weights to each study in order to conduct all appropriate analyses. These weights are derived from a statistical transformation of each r (correlation coefficient) to a Fisher's z (Shadish & Haddock, 2009).
 }
@@ -18,6 +21,9 @@ MetaR(meta)
 Hunter, J. E., Schmidt, F. L. (2004). \emph{Methods of meta-analysis} (2nd edition). Thousand Oaks, CA: Sage. 
 
 Shadish & Haddock (2009). Analyzing effect sizes: Fixed-effects models. In H. Cooper, L. V. Hedges, & J. C. Valentine (Eds.), \emph{The handbook of research synthesis and meta analysis} (pp. 257-278). New York: Russell Sage Foundation. 
+
+Wampold, B. E., Mondin, G. W., Moody, M., Stich, F., Benson, K., & Ahn, H. (1997). A meta-analysis of outcome studies comparing bona fide psychotherapies: Empiricially, 'all must have prizes.' \emph{Psychological Bulletin, 122(3)}, 203-215.
+
 }
 \author{AC Del Re & William T. Hoyt
 

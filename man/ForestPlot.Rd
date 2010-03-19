@@ -35,7 +35,7 @@ data<-data.frame(id,n,r,mod1)
 
 # Example
 
-ForestPlot(data)   
+\dontrun{ForestPlot(data)}   
 }
 \keyword{aplot}
 

@@ -8,16 +8,23 @@
 # correlational meta-analysis using standard procedures as
 # described in Cooper, Hedges, & Valentine's Handbook of
 # Research Synthesis and Meta-Analysis (2009).
-# This package requires the 'ggplot2' package, 'plyr' package.
 
-require('ggplot2')
-require('plyr')
-#require('psych') 
+# suggests('ggplot2')
 
 ##=== New Functions ===##
+
+
+# 3.18.10  internal for GUI: convert to factor
+
+facts <- function(meta, mod) {
+  meta[,mod] <- factor(meta[,mod])
+  return(meta)
+}
+
+
 # 2.24.10: added (1) conversion to d functions, (2) CatComp
 # update
-# 2.23.10: rm agg_r2 (problematic) & CatMod update
+# CatMod update
 # new element of function for mods 2.20.10. Big thanks to 
 # Jim Holtman for the function to randomly select mods
 # integrated into agg_r2()
@@ -31,7 +38,7 @@ MRfit <- function( ...) {
   fit$R2 <- 1 - (fit$RSS / fit$RSS[1])
   fit$R2.change <- c(NA, diff(fit$R2))
   fit$R2[1] <- NA
-  names(fit) <- c("df.Q", "Qw", "predictors", "Qb", "F",  "Pvalue", 
+  names(fit) <- c("df.Q", "Qe", "predictors", "Qb", "F",  "Pvalue", 
                   "R^2", "R^2.change")
   return(fit)
 }
@@ -364,41 +371,59 @@ r_from_chi <- function(chi.sq,  n) sqrt(chi.sq/n)
 # all studies. Function implements Hunter & Schmidt (2004)
 # approach to aggregation of dependent r's (see chapter 10,  pp. 435-8).
 
-aggrs <- function(r) {
+aggrs <- function(r, cor = .50) {
   # Intermediate level function to compute weighted aggregation of effect sizes 
   k <- length(r)
-   rbar <- .50
+   rbar <- cor
    r.xY <- sum(r)/(1 * sqrt(k  +  k*(k - 1) * rbar))
    return(r.xY)
 }
 
-# Intermediate level function to agg data and create new data.frame. 
-# Required inputs are data.frame with r (correlation coefficients) and n (sample size)
-
-agg_r <- function(meta) {
-  agg <- with(meta,  aggregate(list(r = r),  by = list(id = id), aggrs))
-  ns <- with(meta,  aggregate(list(n = n),  by = list(id = id),  mean))
-  ns$n <- round(ns$n, 0)
-  agg.data  <-  merge(agg,  ns,  by='id') 
-  return(agg.data)
-}
+agg_r <- function(meta, cor = .50) {
+  st <- unique(id)
+  out <- data.frame(id=st)
+    for(i in 1:length(st)) { 
+    out$id[i] <- st[i]
+    out$r[i] <- aggrs(r = r[id==st[i]], cor)
+    out$n[i] <- round(mean(n[id==st[i]]),0)
+  }
+  return(out)
+}  
 
 # used to randomly select one level of mod if study reports multi levels
 
-agg_r2 <- function(meta, mod) {
-  agg <- with(meta,  aggregate(list(r = r),  by = list(id = id, mod=mod),  aggrs))
-  ns <- with(meta,  aggregate(list(n = n),  by = list(id = id, mod=mod),  mean))
-  meta  <-  merge(agg,  ns,  by= c('id','mod')) 
-  meta <- as.data.frame(meta)
-  meta$n <- round(ns$n, 0)
-  return(meta)
-  }
+agg_r2 <- function(meta, mod, cor = .50) {
+  st <- unique(id)
+  um <- unique(mod)
+  # Initialize id, mod for all possible combinations.  Delete NAs at end.
+  out <- data.frame(id=rep(st, rep(length(um), length(st))))
+  out$mod <- rep(um, length(st))
+    for(i in 1:length(st)) { 
+      for(j in 1:length(um)) { 
+        # row of df to fill
+        ro <- (i-1)*length(um) + j
+        # Are there any rows in meta where id==i and mod==j?
+        m1<-match(id,st[i],nomatch=0)  # (rows where id==i)
+        m2<-match(mod,um[j],nomatch=0)  # (rows where mod==j)
+        #  m1*m2 will = 1 for each row in which both are true.
+        # sum(m1*m2) gives the number of rows for which both are true.
+        num <- sum(m1*m2)
+        out$r[ro] <- ifelse(num==0,NA, #NA,
+                       aggrs(r = r[id==st[i]&mod==um[j]], cor))
+        out$n[ro] <- round(mean(n[id==st[i]&mod==um[j]]),0)
+      }
+    }
+  # Strip out rows with no data.
+  out2 <- out[is.na(out$r)==0,]
+  #return(out)
+  return(out2)
+}
 
 ##=== Add Fixed and Random Effects Weights ===##
 # Required input is a data.frame with column names id (study id), 
 # r (correlation coefficient),  and n (sample size).
  
-MetaR <-  function(meta) {  
+MetaR <-  function(meta, cor = .50) {  
   # Computes within study aggregation and adds fixed and random effects weights 
   # Args:
   #   meta: data.frame with r (correlation coefficients) and n (sample size)for 
@@ -408,7 +433,7 @@ MetaR <-  function(meta) {
   #   approach to aggregation of dependent r's (see chapter 10,  pp. 435-8).
   #   Adds study weights based of a Fisher's z transformation of r's (see chapter 14, 
   #   Cooper et al., 2009)
-  meta <- agg_r(meta)
+  meta <- agg_r(meta, cor)
   meta$var.r <- var_r(meta$r, meta$n)
   meta$var.r <-  ifelse(is.na(meta$var.r), ((1-meta$r^2)^2)/(meta$n-1), meta$var.r)
   meta$z  <-  0.5*log((1 + meta$r)/(1-meta$r))  #computing r to z' for each study
@@ -525,7 +550,7 @@ OmnibusES<-  function(meta,  var="weighted" ) {
                  I2=I2))
   omni.data <- as.data.frame(c(Fixed, Random))      
   omni.data$Omnibus <- c("k", "ES", "var.ES", "SE", "CI.lower", 
-                         "CI.upper", "Z", "p", "Q", "df", "p.hetero", 
+                         "CI.upper", "Z", "p", "Q", "df", "p.h", 
                          "I2")
   omni.data <- omni.data[c(3, 1, 2)]
   omni.data <- as.data.frame(omni.data)
@@ -715,7 +740,7 @@ CatModf <-  function(meta,  mod) {
   mod.sig2 <- mod.sig[, c(1, 2, 3, 6, 7, 9, 10, 4, 8, 5, 11, 12, 13)] #effects due to heterogeneity rather than chance (p263)
   rownames(mod.sig2) <- NULL
   colnames(mod.sig2) <- c("Mod", "k", "ES", "CI.lower", "CI.upper",  "Z", 
-  "p",  "var.ES", "SE",  "Q", "df", "p.hetero",  "I2")
+  "p",  "var.ES", "SE",  "Q", "df", "p.h",  "I2")
   return(mod.sig2)
 }
 
@@ -843,7 +868,7 @@ CatModr <-  function(meta,  mod) {
   mod.sig2 <- mod.sig[, c(1, 2, 3, 6, 7, 9, 10, 4, 8, 5, 11, 12, 13)]
   rownames(mod.sig2) <- NULL
   colnames(mod.sig2) <- c("Mod", "k", "ES", "CI.lower", "CI.upper",  "Z", 
-  "p",  "var.ES", "SE",  "Q", "df", "p.hetero",  "I2")
+  "p",  "var.ES", "SE",  "Q", "df", "p.h",  "I2")
   return(mod.sig2)
 }  
 
@@ -869,7 +894,7 @@ qrs <- function(meta,  mod) {
   mod.sig2 <- mod.sig[, c(1, 2, 3, 6, 7, 9, 10, 4, 8, 5, 11, 12, 13)] #effects due to heterogeneity rather than chance (p263)
   rownames(mod.sig2) <- NULL
   colnames(mod.sig2) <- c("Mod", "k", "ES", "CI.lower", "CI.upper",  "Z", 
-  "p",  "var.ES", "SE",  "Q", "df", "p.hetero",  "I2")
+  "p",  "var.ES", "SE",  "Q", "df", "p.h",  "I2")
   return(mod.sig2)
 }
 
@@ -906,7 +931,7 @@ CatMod <- function(meta, mod) {
   random <-CatModr(meta,mod)
   random$Q <- fixed$Q
   random$df<- fixed$df
-  random$p.hetero <- fixed$p.hetero
+  random$p.h <- fixed$p.h
   random$I2 <- fixed$I2
   Qf <- CatModfQ(meta,mod) # fixed effect Q
   Qr <- CatModrQ(meta,mod)
@@ -1015,7 +1040,7 @@ CatComp <- function(meta, mod, x1=NULL, x2=NULL,  method="post.hoc1") {
 # multifactor cat mod analysis [IN PROGRESS]:
 #add relevant columns and convert back to r--it will works fine!
 #MFCatMod <- function(meta, mod1, mod2) {
-#  m <- wifun(meta)
+#  m <- Wifun(meta)
 #  m$mod1 <- mod1
 #  m$mod2 <- mod2
 #  fixed <- ddply(m, c("mod1", "mod2"), summarise, sum.wi = sum(wi),
@@ -1080,8 +1105,8 @@ MAreg1 <- function(meta, mod, method="random") {  # Single predictor meta-regres
     df <- anova(reg)["Residuals",  "Df"]
     ms.error <- anova(reg)["Residuals",  "Mean Sq"]
     t.crit <- qt(.975,  df)
-    newSE.z <- round(summary(reg)$coef[, 2]/sqrt(ms.error), 6)  # 15.20 
-    Bs.z <- round(summary(reg)$coef[, 1], 6)
+    newSE.z <- summary(reg)$coef[, 2]/sqrt(ms.error)  # 15.20 
+    Bs.z <- summary(reg)$coef[, 1]
     Bs <-  (exp(2*Bs.z)-1)/(exp(2*Bs.z) + 1)
     newSE <- (exp(2*newSE.z)-1)/(exp(2*newSE.z) + 1)
     t.adj <- round(Bs/newSE, 6)
@@ -1100,8 +1125,8 @@ MAreg1 <- function(meta, mod, method="random") {  # Single predictor meta-regres
     df  <- anova(reg)["Residuals",  "Df"]
     ms.error <- anova(reg)["Residuals",  "Mean Sq"]
     t.crit <- qt(.975,  df)
-    newSE.z  <- round(summary(reg)$coef[, 2]/sqrt(ms.error), 6)  # 15.20 
-    Bs.z  <- round(summary(reg)$coef[, 1], 6)  # Need an option to keep in z' 
+    newSE.z  <- summary(reg)$coef[, 2]/sqrt(ms.error)  # 15.20 
+    Bs.z  <- summary(reg)$coef[, 1]  # Need an option to keep in z' 
     Bs <- (exp(2*Bs.z)-1)/(exp(2*Bs.z) + 1)
     newSE <- (exp(2*newSE.z)-1)/(exp(2*newSE.z) + 1)
     t.adj <- round(Bs/newSE, 6)
@@ -1137,13 +1162,13 @@ MAreg2  <-  function(reg) {  # Multivariate meta-regression
   ms.error  <-  anova(reg)["Residuals",  "Mean Sq"]
   t.crit  <-  qt(.975,  df)
   newSE.z  <-  summary(reg)$coef[, 2]/sqrt(ms.error)  
-  Bs.z  <-  round(summary(reg)$coef[, 1], 4)
+  Bs.z  <-  summary(reg)$coef[, 1]
   Bs <-  (exp(2*Bs.z)-1)/(exp(2*Bs.z) + 1)
   newSE <-  (exp(2*newSE.z)-1)/(exp(2*newSE.z) + 1)
-  t.adj  <-  round(Bs/newSE, 4)
-  p.adj  <-  round(2*(1-pt(abs(t.adj),  df)), 4)
-  lower.ci <- round(Bs-(t.crit*newSE), 4)     #95% CI
-  upper.ci <- round(Bs + (t.crit*newSE), 4)     #95% CI
+  t.adj  <-  round(Bs/newSE, 6)
+  p.adj  <-  round(2*(1-pt(abs(t.adj),  df)), 6)
+  lower.ci <- round(Bs-(t.crit*newSE), 6)     #95% CI
+  upper.ci <- round(Bs + (t.crit*newSE), 6)     #95% CI
   #sig <- symnum(p.adj,  corr = FALSE,  na = FALSE,  
   #           cutpoints <- c(0,  0.001,  0.01,  0.05,  0.1,  1), 
   #           symbols <- c("***",  "**",  "*",  ".",  " ")) 
@@ -1174,6 +1199,7 @@ MAregGraph <- function(meta, mod,  method="random",  modname=NULL,  title=NULL, 
   #   Scatterplot with fixed or random effects regression line and where size of points are 
   #   based on study weights--more precise studies are larger. The ggplot2 package outputs the 
   #   rich graphics. 
+  require('ggplot2')
   m <- meta
   m$mod <- mod
   compl<-!is.na(m$mod)
@@ -1251,6 +1277,7 @@ CatModGraph <- function(meta, mod,  method="random",  modname=NULL,  title=NULL)
   #   jitter points for each study and the size of points are based on study weights--more 
   #   precise studies are larger. The ggplot2 package outputs the 
   #   rich graphics. 
+  require('ggplot2')
   m <- meta
   m$mod <- mod
   compl<-!is.na(m$mod)
@@ -1318,6 +1345,7 @@ ForestPlot <- function(meta, method="random", title=NULL) {
   #   Forest plot with omnibus effect size (fixed or random), point for each study 
   #   where size of point is based on the study's precision (based primarily on 
   #   sample size) and 95% confidence intervals. The ggplot2 package outputs the rich graphics.  
+  require('ggplot2') 
   meta <- meta 
   meta$id <- factor(meta$id)  # , levels=rev(id))
   meta$z  <-  0.5*log((1 + meta$r)/(1-meta$r))   
@@ -1409,6 +1437,7 @@ FunnelPlot <- function(meta, method="random",  title=NULL) {
   #   where size of point is based on the study's precision (based primarily on sample 
   #   size) and standard error lines to assess for publication bias. 
   #   The ggplot2 package outputs the rich graphics.     
+  require('ggplot2')
   meta <- MetaR(meta)
   sum.wi <- sum(meta$wi, na.rm=TRUE)       
   sum.wiTi <- sum(meta$wiTi, na.rm=TRUE)    
@@ -1490,6 +1519,7 @@ MultiModGraph <- function(meta, conmod,  catmod, method="random",
   #   Multivariate moderator scatterplot graph faceted by categorical moderator levels. Also
   #   places a weighted regression line based on either a fixed or random effects analysis. 
   #   The ggplot2 packages outputs the rich graphics.  
+  require('ggplot2')
   m <- meta
   m$conmod <- conmod
   m$catmod <- catmod
@@ -1609,7 +1639,7 @@ Kappa <- function(rater1, rater2)  {
 
 # Function to reduce data set with complete data for 1 predictor 
 
-ComplData <- function(meta, mod, type= "independent") {   
+ComplData <- function(meta, mod, type= "independent", cor = .50) {   
   # Outputs an aggregated data.frame that will remove any missing data from the data 
   # set. This is particularly useful to output non-missing data based on a specified
   # number of variables (generally in conjunction with the multivariate moderator
@@ -1625,14 +1655,13 @@ ComplData <- function(meta, mod, type= "independent") {
   m$mod <- mod
   compl <- !is.na(m$mod)
   m <- m[compl, ]
-  #meta <- agg_r2(m,m$mod)
   if(type == "independent") {
-    meta <- ddply(m,  c("id", "mod"),  summarize,  r = aggrs(r), n=mean(n))
+    meta <- agg_r2(m,  m$mod, cor)
     meta <- do.call(rbind, lapply(split(meta, meta$id), 
           function(.data) .data[sample(nrow(.data), 1),]))
   }
   if(type == "dependent") {
-    meta <- ddply(m,  c("id", "mod"),  summarize,  r = aggrs(r), n=mean(n))
+    meta <- agg_r2(m,  m$mod, cor)
   }
   meta$z  <-  0.5*log((1 + meta$r)/(1-meta$r))   
   meta$var.z <- 1/(meta$n-3)
@@ -1657,6 +1686,7 @@ ComplData <- function(meta, mod, type= "independent") {
   return(meta)
 }
          
+    
 
 # Correction for Attenuation
 
@@ -1699,8 +1729,8 @@ CorAtten <- function (meta, xx, yy)
     return(meta)
 }
 
-# internal function for multifactor cat mod:
-wifun <-  function(meta) {  
+
+Wifun <-  function(meta) {  
   meta$var.r <- var_r(meta$r, meta$n)
   meta$var.r <-  ifelse(is.na(meta$var.r), ((1-meta$r^2)^2)/(meta$n-1), meta$var.r)
   meta$z  <-  0.5*log((1 + meta$r)/(1-meta$r))  #computing r to z' for each study

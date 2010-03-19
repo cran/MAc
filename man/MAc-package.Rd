@@ -10,8 +10,8 @@
 \tabular{ll}{
 Package: \tab MAc\cr
 Type: \tab Package\cr
-Version: \tab 1.0.6\cr
-Date: \tab 2010-03-12\cr
+Version: \tab 1.0.7\cr
+Date: \tab 2010-03-19\cr
 License: \tab GPL-2\cr
 LazyLoad: \tab yes\cr
 }
@@ -90,12 +90,12 @@ MAreg1(datas, datas$mod1)
 
 # 5. Graphics:
 
-MAregGraph(datas, datas$mod1)  
+\dontrun{MAregGraph(datas, datas$mod1)  }
 
 # same as above but will output a meta-regression graph
 }
 \seealso{
-\bold{MAc} package:  \url{http://CRAN.R-project.org/package=RcmdrPlugin.MAc}
-\bold{MAd} package:  \url{http://CRAN.R-project.org/package=MAd}
-\bold{MAd} package:  \url{http://CRAN.R-project.org/package=RcmdrPlugin.MAd}
+\bold{RcmdrPlugin.MAc} package:  \url{http://CRAN.R-project.org/package=RcmdrPlugin.MAc};
+\bold{MAd} package:  \url{http://CRAN.R-project.org/package=MAd};
+\bold{RcmdrPlugin.MAd} package:  \url{http://CRAN.R-project.org/package=RcmdrPlugin.MAd}
 }

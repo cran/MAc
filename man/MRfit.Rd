@@ -17,7 +17,7 @@ The outcome variable is a Fishers z and the predictor moderator(s) can be either
 \value{
 \item{df.Q}{ Q degrees of freedom.
 } 
-\item{Qw}{ Q-within, indicating within-group heterogeneity.
+\item{Qe}{ Q-error, weighted residual sum of squares.
 }
 \item{predictors}{ Number of predictors in the model for each block.
 }

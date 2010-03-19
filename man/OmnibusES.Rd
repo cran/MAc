@@ -36,7 +36,7 @@ Fixed and random effects:
 }
 \item{df}{ Degrees of freedom for Q-statistic.
 }
-\item{p.hetero}{ Q-statistic p-value (assesses overall heterogeneity between studies).
+\item{p.h}{ Q-statistic p-value (assesses overall homogeneity between studies).
 }
 \item{I2}{ Proportion of total variation in effect size that is due to heterogeneity rather than chance (see Shadish & Haddock, 2009; pp. 263).
 }

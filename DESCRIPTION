@@ -1,8 +1,8 @@
 Package: MAc
 Type: Package
 Title: Meta-Analysis with Correlations
-Version: 1.0.6
-Date: 2010-03-12
+Version: 1.0.7
+Date: 2010-03-19
 Author: AC Del Re & William T. Hoyt
 Maintainer: AC Del Re <acdelre@gmail.com>
 Description: This is an integrated meta-analysis package for conducting
@@ -13,8 +13,9 @@ Description: This is an integrated meta-analysis package for conducting
         recommended procedures as described in The Handbook of Research
         Synthesis and Meta-Analysis (Cooper, Hedges, & Valentine,
         2009).
-Depends: R (>= 2.10.1), plyr, ggplot2
+Depends: R (>= 2.10.1)
+Suggests: ggplot2
 License: GPL-2
-Packaged: 2010-03-12 22:02:42 UTC; User
+Packaged: 2010-03-19 14:33:25 UTC; User
 Repository: CRAN
-Date/Publication: 2010-03-13 14:54:28
+Date/Publication: 2010-03-19 15:13:45

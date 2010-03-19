@@ -31,10 +31,10 @@ n<-c(10,20,13,22,28,12,12,36,19,12,36,75,33,121,37,14,40,16,14,20)
 r<-c(.68,.56,.23,.64,.49,-.04,.49,.33,.58,.18,-.11,.27,.26,.40,.49,
  .51,.40,.34,.42,.16)
 mod1<-factor(c(rep(c(1,2,3,4),5)))   
-data<-data.frame(id, n, r, mod1)
+datas<-data.frame(id, n, r, mod1)
 
 # Example
 
-FunnelPlot(data)
+\dontrun{FunnelPlot(datas)}
 }
 \keyword{aplot}
