@@ -4,14 +4,14 @@
 \docType{package}
 \title{Meta-Analysis with Correlations
 }
-\description{ This package contains variety of functions relevant to conducting a correlational meta-analysis using recommended procedures as described in \emph{The Handbook of Research Synthesis and Meta-Analysis} (Cooper, Hedges, and Valentine, 2009). The goal in creating this package was to provide a variety of user-friendly functions to assist researchers in the process of conducting a meta-analysis, from the initial to final stages of their analytic endeavor. The meta-analyst can begin their project by using \code{MAc} functions to derive correlation coefficents from the primary studies, when statistics other than correlations are reported (e.g., t-test, p-value, or Cohen's d). Then, the analyst can aggregate all within-study effect sizes (while accounting for within-study correlations among outcome measures and eliminating any dependencies in the dataset) based on recommended procedures by Hunter & Schmidt (2004), calculate omnibus effect sizes under a fixed and random effects model, and assess for significant moderators (categorical and continuous, single and multi-predictor models) in the dataset. Finally, the meta-analyst can use one of several user-friendly graphics functions to visually represent their data in an elegant manner. 
+\description{ This package contains variety of functions relevant to conducting a correlational meta-analysis using recommended procedures as described in \emph{The Handbook of Research Synthesis and Meta-Analysis} (Cooper, Hedges, and Valentine, 2009). The goal in creating this package was to provide user-friendly functions to assist researchers in the process of conducting a meta-analysis, from the initial to final stages of their analytic endeavor. The meta-analyst can begin their project by using \code{MAc} functions to derive correlation coefficents from the primary studies, when statistics other than correlations are reported (e.g., t-test, p-value, or Cohen's d). Then, the analyst can aggregate all within-study effect sizes (while accounting for within-study correlations among outcome measures and eliminating any dependencies in the dataset) based on recommended procedures by Hunter & Schmidt (2004), calculate omnibus effect sizes under a fixed and random effects model, and assess for significant moderators (categorical and continuous, single and multi-predictor models) in the dataset. Finally, the meta-analyst can use one of several user-friendly graphics functions to visually represent their data in an elegant manner. 
 }
 \details{
 \tabular{ll}{
 Package: \tab MAc\cr
 Type: \tab Package\cr
-Version: \tab 1.0.7\cr
-Date: \tab 2010-03-19\cr
+Version: \tab 1.0.8\cr
+Date: \tab 2010-03-29\cr
 License: \tab GPL-2\cr
 LazyLoad: \tab yes\cr
 }
@@ -20,10 +20,11 @@ The \code{MAc} package has integrated functions to facilitate the meta-analytic 
 1. Computations to Calculate Correlations: 
 
 There are a variety of functions to compute r (correlation coefficients) from various designs reported in the primary studies. Most functions were derived from Borenstein's chapter (pp. 231-234) in \emph{The Handbook of Research Synthesis and Meta-Analysis} (Cooper, Hedges, & Valentine, 2009).
+ For additional conversion formulas see the \bold{compute.es} package:  \url{http://CRAN.R-project.org/package=compute.es}
 
 2. Within-Study Aggregation of Effect Sizes:
 
-This package contains functions that have automated (i.e., will compute for all studies simultaneously) the process of aggregating within-study effect sizes while taking into account the dependencies among the within-study effect sizes (Hunter & Schmidt, 2004; Hedges & Olkin, 1985; Rosenthal et al., 2006). These functions fix the correlation between within-study effect sizes at .50 (Wampold et al., 1997) and will compute the correct aggregated effect size for all studies. \code{MAc} functions implement Hunter and Schmidt's (2004) recommendations for aggregating dependent correlations (see chapter 10, pp. 435-8).To our knowledge, this is the first statistical package/program that has explicitly utilized and automated this aggregation procedure, which has a dual effect of saving the researcher \bold{substantial} amounts of time while increasing the accuracy of their analyses. 
+This package contains functions that have automated (i.e., will compute for all studies simultaneously) the process of aggregating within-study effect sizes while taking into account the dependencies among the within-study effect sizes (Hunter & Schmidt, 2004; Hedges & Olkin, 1985; Rosenthal et al., 2006). These functions fix the correlation between within-study effect sizes at .50 (Wampold et al., 1997) and will compute the correct aggregated effect size for all studies. \code{MAc} functions implement Hunter and Schmidt's (2004) recommendations for aggregating dependent correlations (see chapter 10, pp. 435-8).To our knowledge, this is the first statistical package/program that has explicitly utilized and automated this aggregation procedure, which has a dual effect of saving the researcher \bold{substantial} time while increasing the accuracy of their analyses. 
 
 3. Fixed and Random Effects Omnibus Analysis: 
 
@@ -96,6 +97,10 @@ MAreg1(datas, datas$mod1)
 }
 \seealso{
 \bold{RcmdrPlugin.MAc} package:  \url{http://CRAN.R-project.org/package=RcmdrPlugin.MAc};
+
 \bold{MAd} package:  \url{http://CRAN.R-project.org/package=MAd};
-\bold{RcmdrPlugin.MAd} package:  \url{http://CRAN.R-project.org/package=RcmdrPlugin.MAd}
+
+\bold{RcmdrPlugin.MAd} package:  \url{http://CRAN.R-project.org/package=RcmdrPlugin.MAd};
+
+\bold{compute.es} package:  \url{http://CRAN.R-project.org/package=compute.es}
 }
