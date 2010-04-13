@@ -1,8 +1,8 @@
 Package: MAc
 Type: Package
 Title: Meta-Analysis with Correlations
-Version: 1.0.8
-Date: 2010-03-29
+Version: 1.0.8-1
+Date: 2010-04-13
 Author: AC Del Re & William T. Hoyt
 Maintainer: AC Del Re <acdelre@gmail.com>
 Description: This is an integrated meta-analysis package for conducting
@@ -18,6 +18,6 @@ Enhances: compute.es
 License: GPL-2
 URL:
         http://rwiki.sciviews.org/doku.php?id=packages:cran:ma_meta-analysis
-Packaged: 2010-03-29 05:42:33 UTC; User
+Packaged: 2010-04-12 19:55:30 UTC; User
 Repository: CRAN
-Date/Publication: 2010-04-02 17:05:17
+Date/Publication: 2010-04-13 07:14:17

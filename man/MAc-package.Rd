@@ -10,8 +10,8 @@
 \tabular{ll}{
 Package: \tab MAc\cr
 Type: \tab Package\cr
-Version: \tab 1.0.8\cr
-Date: \tab 2010-03-29\cr
+Version: \tab 1.0.8-1\cr
+Date: \tab 2010-04-13\cr
 License: \tab GPL-2\cr
 LazyLoad: \tab yes\cr
 }
@@ -84,10 +84,10 @@ OmnibusES(datas)
  
 # 4. Moderator Analyses:
 
-MAreg1(datas, datas$mod1) 
+MAreg1(datas, datas$mod1, method = "fixed") 
  
 # where datas = data.frame with columns for r and n. data$mod1 = moderator
-# variable of interest.
+# variable of interest and the method is fixed effects. 
 
 # 5. Graphics:
 

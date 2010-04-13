@@ -1,7 +1,7 @@
 ##==================             MAc             ================##      
 ##==================  Meta-Analysis Correlations ================##
 
-# updated: 03.09.10
+# updated: 04.12.10
 
 # Package created by AC Del Re & William T. Hoyt
 # This package contains all the relevant functions to conduct a
@@ -38,8 +38,10 @@ MRfit <- function( ...) {
   fit$R2 <- 1 - (fit$RSS / fit$RSS[1])
   fit$R2.change <- c(NA, diff(fit$R2))
   fit$R2[1] <- NA
-  names(fit) <- c("df.Q", "Qe", "predictors", "Qb", "F",  "Pvalue", 
+  fit$F <- NULL
+  names(fit) <- c("df.Q", "Qe", "predictors", "Q", "p", 
                   "R^2", "R^2.change")
+  fit$p <- NULL
   return(fit)
 }
 
@@ -380,6 +382,9 @@ aggrs <- function(r, cor = .50) {
 }
 
 agg_r <- function(meta, cor = .50) {
+  id <- meta$id
+  n <- meta$n
+  r <- meta$r
   st <- unique(id)
   out <- data.frame(id=st)
     for(i in 1:length(st)) { 
@@ -392,31 +397,30 @@ agg_r <- function(meta, cor = .50) {
 
 # used to randomly select one level of mod if study reports multi levels
 
-agg_r2 <- function(meta, mod, cor = .50) {
-  st <- unique(id)
-  um <- unique(mod)
-  # Initialize id, mod for all possible combinations.  Delete NAs at end.
-  out <- data.frame(id=rep(st, rep(length(um), length(st))))
-  out$mod <- rep(um, length(st))
-    for(i in 1:length(st)) { 
-      for(j in 1:length(um)) { 
-        # row of df to fill
-        ro <- (i-1)*length(um) + j
-        # Are there any rows in meta where id==i and mod==j?
-        m1<-match(id,st[i],nomatch=0)  # (rows where id==i)
-        m2<-match(mod,um[j],nomatch=0)  # (rows where mod==j)
-        #  m1*m2 will = 1 for each row in which both are true.
-        # sum(m1*m2) gives the number of rows for which both are true.
-        num <- sum(m1*m2)
-        out$r[ro] <- ifelse(num==0,NA, #NA,
-                       aggrs(r = r[id==st[i]&mod==um[j]], cor))
-        out$n[ro] <- round(mean(n[id==st[i]&mod==um[j]]),0)
-      }
+ agg_r2<-function (meta, mod, cor = 0.5){
+    id <- meta$id
+    n <- meta$n
+    r <- meta$r
+    st <- as.factor(id)
+    st <- unique(st)
+    #st <- unique(id)
+    um <- unique(mod)
+    out <- data.frame(id = rep(st, rep(length(um), length(st))))
+    out$mod <- rep(um, length(st))
+    for (i in 1:length(st)) {
+        for (j in 1:length(um)) {
+            ro <- (i - 1) * length(um) + j
+            m1 <- match(id, st[i], nomatch = 0)
+            m2 <- match(mod, um[j], nomatch = 0)
+            num <- sum(m1 * m2)
+            out$r[ro] <- ifelse(num == 0, NA, aggrs(r = r[id == 
+                st[i] & mod == um[j]], cor))
+            out$n[ro] <- round(mean(n[id == st[i] & mod == um[j]]), 
+                0)
+        }
     }
-  # Strip out rows with no data.
-  out2 <- out[is.na(out$r)==0,]
-  #return(out)
-  return(out2)
+    out2 <- out[is.na(out$r) == 0, ]
+    return(out2)
 }
 
 ##=== Add Fixed and Random Effects Weights ===##
@@ -456,6 +460,7 @@ MetaR <-  function(meta, cor = .50) {
   sum.wi2 <- sum(meta$wi^2, na.rm=TRUE)  # used to calculate random effects 
   comp <- sum.wi-sum.wi2/sum.wi  # (pg. 271) used to calculate random effects	
   meta$tau <- (Q-(k - 1))/comp  # Level 2 variance
+  meta$tau <- ifelse(meta$tau <= 0, 0, meta$tau)
   meta$var.tau <- meta$tau + meta$var.z  # Random effects variance (within study var + between var) 
   meta$wi.tau <- 1/meta$var.tau  # Random effects weights
   meta$wiTi.tau <- meta$wi.tau*meta$z
@@ -908,8 +913,6 @@ CatComp <- function(meta, mod, x1=NULL, x2=NULL,  method="post.hoc1") {
   out<- list(Fixed=fixed, Random=random)
   return(out)
 }
-
-
 
 # multifactor cat mod analysis [IN PROGRESS]:
 #add relevant columns and convert back to r--it will works fine!

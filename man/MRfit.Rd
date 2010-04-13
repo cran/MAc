@@ -21,11 +21,9 @@ The outcome variable is a Fishers z and the predictor moderator(s) can be either
 }
 \item{predictors}{ Number of predictors in the model for each block.
 }
-\item{Qb}{ Q-between, indicating the between-group heterogeneity.
+\item{Q}{ Q-statistic, indicating overall heterogeneity.
 }
-\item{F}{ F-value.
-}
-\item{Pvalue}{ Significance level.
+\item{p}{ Significance level.
 }
 \item{R^2}{ R-squared, the coefficient of determination, is the proportion of variability in a data set that is accounted for by the statistical model.
 }
