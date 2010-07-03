@@ -14,7 +14,7 @@ r_to_d(r, N)
 }
 }
 \value{
-\item{d}{Standardized mean difference (d)}
+\item{d}{Standardized mean difference (d).}
 }
 \author{ AC Del Re & William T. Hoyt
 
@@ -34,7 +34,6 @@ Maintainer: AC Del Re \email{acdelre@gmail.com}
 \code{\link{ancova_to_d2}}, 
 \code{\link{tt.ancova_to_d}}, 
 \code{\link{f.ancova_to_d}}, 
-\code{\link{r_to_d}}, 
 \code{\link{p.ancova_to_d1}},
 \code{\link{p.ancova_to_d2}},
 \code{\link{lor_to_d}},

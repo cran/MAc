@@ -1,9 +1,9 @@
 \name{f.ancova_to_d}
 \alias{f.ancova_to_d}
-\title{ANCOVA F-statistic to d 
+\title{ANCOVA F-statistic to Standardized Mean Difference (d) 
 }
 \description{
-Converts an ANCOVA F-statistic to d (standardized mean difference)
+Converts an ANCOVA F-statistic to d (standardized mean difference).
 }
 \usage{
 f.ancova_to_d(f, n.1, n.2, R, q)
@@ -11,18 +11,20 @@ f.ancova_to_d(f, n.1, n.2, R, q)
 \arguments{
   \item{f}{F-test value from ANCOVA.
 }
-  \item{n.1}{Treatment group sample size
+  \item{n.1}{Treatment group sample size.
 }
-  \item{n.2}{Comparison group sample size
+  \item{n.2}{Comparison group sample size.
 }
-  \item{R}{Covariate outcome correlation or multiple correlation
+  \item{R}{Covariate outcome correlation or multiple correlation.
 }
-  \item{q}{number of covariates
+  \item{q}{number of covariates.
 }
 }
 \value{
-\item{d}{Standardized mean difference (d)}
-\item{var_d }{Variance of d}
+\item{d}{Standardized mean difference (d).
+}
+\item{var_d }{Variance of d.
+}
 
 }
 \author{ AC Del Re & William T. Hoyt
@@ -42,7 +44,6 @@ Maintainer: AC Del Re \email{acdelre@gmail.com}
 \code{\link{ancova_to_d1}}, 
 \code{\link{ancova_to_d2}}, 
 \code{\link{tt.ancova_to_d}}, 
-\code{\link{f.ancova_to_d}}, 
 \code{\link{r_to_d}}, 
 \code{\link{p.ancova_to_d1}},
 \code{\link{p.ancova_to_d2}},

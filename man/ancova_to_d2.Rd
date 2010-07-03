@@ -1,9 +1,9 @@
 \name{ancova_to_d2}
 \alias{ancova_to_d2}
-\title{ANCOVA F-statistic to Standardized Mean Difference (d) II
+\title{ANCOVA F-statistic to d II
 }
 \description{
-Converts an ANCOVA F-statistic with pooled standard deviation to d (standardized mean difference).
+Converts an ANCOVA F-statistic with pooled standard deviation to d (standardized mean difference)
 }
 \usage{
 ancova_to_d2(m.1.adj, m.2.adj, s.pooled, n.1, n.2, R, q)
@@ -21,14 +21,12 @@ ancova_to_d2(m.1.adj, m.2.adj, s.pooled, n.1, n.2, R, q)
 }
   \item{R}{Covariate outcome correlation or multiple correlation.
 }
-  \item{q}{number of covariates
+  \item{q}{number of covariates.
 }
 }
 \value{
-\item{d}{Standardized mean difference (d).
-}
-\item{var_d }{Variance of d.
-}
+\item{d}{Standardized mean difference (d).}
+\item{var_d }{Variance of d.}
 
 }
 \author{ AC Del Re & William T. Hoyt
@@ -46,6 +44,7 @@ Maintainer: AC Del Re \email{acdelre@gmail.com}
 \code{\link{p_to_d1}},
 \code{\link{p_to_d2}}, 
 \code{\link{ancova_to_d1}}, 
+\code{\link{ancova_to_d2}}, 
 \code{\link{tt.ancova_to_d}}, 
 \code{\link{f.ancova_to_d}}, 
 \code{\link{r_to_d}}, 

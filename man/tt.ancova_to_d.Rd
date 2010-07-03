@@ -39,7 +39,6 @@ Maintainer: AC Del Re \email{acdelre@gmail.com}
 \code{\link{p_to_d2}}, 
 \code{\link{ancova_to_d1}}, 
 \code{\link{ancova_to_d2}}, 
-\code{\link{tt.ancova_to_d}}, 
 \code{\link{f.ancova_to_d}}, 
 \code{\link{r_to_d}}, 
 \code{\link{p.ancova_to_d1}},

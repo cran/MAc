@@ -2,7 +2,7 @@
 \alias{mean_to_d}
 \title{Means to Standardized Mean Difference
 }
-\description{Converts raw mean scores from the primary study to a standardized mean difference (d).
+\description{Converts raw mean scores reported in the primary study to a standardized mean difference (d).
 }
 \usage{
 mean_to_d(m.1, m.2, sd.1, sd.2, n.1, n.2)
@@ -22,8 +22,8 @@ mean_to_d(m.1, m.2, sd.1, sd.2, n.1, n.2)
 }
 }
 \value{
-\item{d}{Standardized mean difference (d)}
-\item{var.d }{Variance of d}
+\item{d}{Standardized mean difference (d).}
+\item{var.d }{Variance of d.}
 
 }
 \author{ AC Del Re & William T. Hoyt
@@ -34,7 +34,6 @@ Maintainer: AC Del Re \email{acdelre@gmail.com}
 }
 \seealso{
 \code{\link{d_to_g}},
-\code{\link{mean_to_d}},
 \code{\link{mean_to_d2}},
 \code{\link{t_to_d}},
 \code{\link{f_to_d}},

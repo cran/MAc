@@ -1,7 +1,7 @@
 \name{facts}
-\title{Internal MAc objects}
+\title{Internal MAd objects}
 \alias{facts}
-\description{Internal MAc objects.}
+\description{Internal MAd objects.}
 \details{These are not to be called by the user.}
 \keyword{internal}
 

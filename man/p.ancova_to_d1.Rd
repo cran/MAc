@@ -2,7 +2,7 @@
 \alias{p.ancova_to_d1}
 \title{One-tailed p-value from ANCOVA to Standardized Mean Difference (d)
 }
-\description{Converts a one-tailed p-value from ANCOVA to a standardized mean difference (d)}
+\description{Converts a one-tailed p-value from ANCOVA reported in the primary study to a standardized mean difference (d)}
 \usage{
 p.ancova_to_d1(p, n.1, n.2, R, q)
 }
@@ -19,8 +19,8 @@ p.ancova_to_d1(p, n.1, n.2, R, q)
 }
 }
 \value{
- \item{d}{Standardized mean difference (d)}
- \item{var_d }{Variance of d}
+ \item{d}{Standardized mean difference (d).}
+ \item{var_d }{Variance of d.}
 
 }
 \author{ AC Del Re & William T. Hoyt
@@ -42,7 +42,6 @@ Maintainer: AC Del Re \email{acdelre@gmail.com}
 \code{\link{tt.ancova_to_d}}, 
 \code{\link{f.ancova_to_d}}, 
 \code{\link{r_to_d}}, 
-\code{\link{p.ancova_to_d1}},
 \code{\link{p.ancova_to_d2}},
 \code{\link{lor_to_d}},
 \code{\link{prop_to_or}}, 

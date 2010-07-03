@@ -20,8 +20,8 @@ mean_to_d2(m.1, m.2, s.pooled, n.1, n.2)
 }
 }
 \value{
-\item{d}{Standardized mean difference (d)}
-\item{var.d }{Variance of d}
+\item{d}{Standardized mean difference (d).}
+\item{var.d }{Variance of d.}
 
 }
 \author{ AC Del Re & William T. Hoyt
@@ -33,7 +33,6 @@ Maintainer: AC Del Re \email{acdelre@gmail.com}
 \seealso{
 \code{\link{d_to_g}},
 \code{\link{mean_to_d}},
-\code{\link{mean_to_d2}},
 \code{\link{t_to_d}},
 \code{\link{f_to_d}},
 \code{\link{p_to_d1}},

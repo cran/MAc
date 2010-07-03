@@ -16,8 +16,10 @@ f_to_d(f, n.1, n.2)
 }
 }
 \value{
-\item{d}{Standardized mean difference (d)}
-\item{var_d }{Variance of d}
+\item{d}{Standardized mean difference (d).
+}
+\item{var_d }{Variance of d.
+}
 
 }
 \author{ AC Del Re & William T. Hoyt
@@ -31,7 +33,6 @@ Maintainer: AC Del Re \email{acdelre@gmail.com}
 \code{\link{mean_to_d}},
 \code{\link{mean_to_d2}},
 \code{\link{t_to_d}},
-\code{\link{f_to_d}},
 \code{\link{p_to_d1}},
 \code{\link{p_to_d2}}, 
 \code{\link{ancova_to_d1}}, 

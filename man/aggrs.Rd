@@ -1,8 +1,6 @@
 \name{aggrs}
 \alias{aggrs}
-\title{Intermediate level function}
-\description{Internal MAc objects.}
-\author{AC Del Re & William T. Hoyt
-}
+\title{Internal anRpackage objects}
+\description{Internal anRpackage objects.}
+\details{These are not to be called by the user.}
 \keyword{internal}
-

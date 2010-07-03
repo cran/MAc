@@ -1,9 +1,9 @@
 \name{ancova_to_d1}
 \alias{ancova_to_d1}
-\title{ANCOVA F-statistic to Standardized Mean Difference (d) 
+\title{ANCOVA F-statistic to d 
 }
 \description{
-Converts an ANCOVA F-statistic to d (standardized mean difference).
+Converts an ANCOVA F-statistic to d (standardized mean difference)
 }
 \usage{
 ancova_to_d1(m.1.adj, m.2.adj, sd.adj, n.1, n.2, R, q)
@@ -25,10 +25,8 @@ ancova_to_d1(m.1.adj, m.2.adj, sd.adj, n.1, n.2, R, q)
 }
 }
 \value{
-\item{d}{Standardized mean difference (d).
-}
-\item{var_d }{Variance of d.
-}
+\item{d}{Standardized mean difference (d).}
+\item{var_d }{Variance of d.}
 
 }
 \author{ AC Del Re & William T. Hoyt
@@ -45,6 +43,7 @@ Maintainer: AC Del Re \email{acdelre@gmail.com}
 \code{\link{f_to_d}},
 \code{\link{p_to_d1}},
 \code{\link{p_to_d2}}, 
+\code{\link{ancova_to_d1}}, 
 \code{\link{ancova_to_d2}}, 
 \code{\link{tt.ancova_to_d}}, 
 \code{\link{f.ancova_to_d}}, 

@@ -14,8 +14,10 @@ lor_to_d(lor, var.lor)
 }
 }
 \value{
-\item{d}{Standardized mean difference (d)}
-\item{var_d }{Variance of d}
+\item{d}{Standardized mean difference (d).
+}
+\item{var_d }{Variance of d.
+}
 
 }
 \author{ AC Del Re & William T. Hoyt
@@ -39,7 +41,6 @@ Maintainer: AC Del Re \email{acdelre@gmail.com}
 \code{\link{r_to_d}}, 
 \code{\link{p.ancova_to_d1}},
 \code{\link{p.ancova_to_d2}},
-\code{\link{lor_to_d}},
 \code{\link{prop_to_or}}, 
 \code{\link{prop_to_d}}, 
 \code{\link{r_from_chi}}, 

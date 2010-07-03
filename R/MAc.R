@@ -1,8 +1,6 @@
 ##==================             MAc             ================##      
 ##==================  Meta-Analysis Correlations ================##
 
-# updated: 04.12.10
-
 # Package created by AC Del Re & William T. Hoyt
 # This package contains all the relevant functions to conduct a
 # correlational meta-analysis using standard procedures as
@@ -10,10 +8,1247 @@
 # Research Synthesis and Meta-Analysis (2009).
 
 # suggests('ggplot2')
+# suggests('metafor')
+# suggests('irr')
+# suggests('R2wd')
+# enhances('compute.es')
 
 ##=== New Functions ===##
 
+# Overhauled entire package 06.29.10
 
+mareg <- function(formula, var, data, ztor = FALSE, method = "REML", subset, ...) {
+  UseMethod("mareg")
+}
+
+print.mareg <- function (x, digits = max(3, getOption("digits") - 3), ...){
+    cat("\nCall:\n", deparse(x$call), "\n\n", sep = "")
+    coef <- as.vector(x$b)
+    names(coef) <- rownames(x$b)
+  print.default(format(coef, digits = digits), print.gap = 2, 
+            quote = FALSE)   
+  #print.default(coef)
+    invisible(x)
+}
+    
+summary.mareg <- function(object, ...) {
+  b <- object$b
+  se <- object$se
+  z <- object$zval
+  ci.lower <- object$ci.lb
+  ci.upper <- object$ci.ub
+  p <- object$pval
+  QE <- object$QE
+  QEp <- object$QEp
+  QE.df <- round(object$k - object$p, 0)
+  QM <- object$QM
+  QMp <- object$QMp
+  QM.df <- round(object$m, 0)
+  tau2_empty <- object$tau2_empty
+  tau2 <- object$tau2
+  R2 <- object$R2
+  table <- cbind(b, se, z, ci.lower, ci.upper, p)
+  colnames(table) <- c("estimate", "se", "z", "ci.u",
+    "ci.l", "Pr(>|z|)")
+  #rownames(table) <- object$predictors
+  table2 <- cbind(QE, QE.df, QEp, QM, QM.df, QMp)
+  colnames(table2) <- c("QE", "QE.df", "QEp", "QM", "QM.df", "QMp")
+  model <- list(coef = table, fit = table2, tau2_empty=tau2_empty,
+   tau2=tau2, R2=R2)
+  rownames(model$fit) <-NULL
+  class(model) <- "summary.mareg"
+  return(model)
+}
+
+
+print.summary.mareg <- function(x, ...) {
+  cat("\n Note: 
+       If using r and the variance of r as input, be sure to 
+       leave the default ztor = FALSE, otherwise the output will be
+       inaccurate. If using z' (Fisher's z) and the variance of z'
+       as the input, changing ztor = TRUE will convert z' back to r 
+       (for interpretive purposes) after all analyses have been 
+       conducted.", "", "\n","----","\n")
+  cat("\n Model Results:", "", "\n", "\n")
+  printCoefmat(x$coef, signif.stars = TRUE)
+  cat("\n Heterogeneity & Fit:", "", "\n" ,"\n")
+  print(round(x$fit,4))
+  invisible(x)
+}
+
+r2 <- function(x) {
+   UseMethod("r2")
+}
+
+r2.mareg <- function(x) {
+  cat("\n Explained Variance:", "", "\n")
+  cat("\n Tau^2      (total):", round(x$tau2_empty,4))
+  cat("\n Tau^2      (model):", round(x$tau2,4))
+  cat("\n R^2 (% expl. var.):", round(x$R2,2), "\n")
+}
+
+# formula based function for meta-regression!! 
+mareg.default <- function(formula, var, data, ztor = FALSE, method = "REML",  
+  subset, ...) {
+    require('metafor', quietly=TRUE)  # requires metafor's rma function
+    call <- match.call()
+    mf <- match.call(expand.dots = FALSE)
+    args <- match(c("formula", "var", "data", "subset"),
+      names(mf), 0)
+    mf <- mf[c(1, args)]
+    mf$drop.unused.levels <- TRUE
+    mf[[1]] <- as.name("model.frame")
+    mf <- eval.parent(mf)
+    terms <- attr(mf, "terms")
+    yi <- model.response(mf)
+    vi <- model.extract(mf, "var")
+    mods <- model.matrix(terms, mf, contrasts)
+    intercept <- which(colnames(mods) == "(Intercept)")
+    if(length(intercept > 0)) mods <- mods[ , -intercept]
+    model0 <- rma(yi=yi, vi=vi, method=method, ...)
+    model <- rma(yi,vi=vi,mods=mods, method=method, ...)
+    predictors <- colnames(mods)
+    if(ztor == TRUE) {
+      model0$var.z <- diag(model0$vb)
+      model0$var <- (exp(2*model0$var.z)-1)/(exp(2*model0$var.z) + 1)
+      model0$se <- sqrt(model0$var)
+      model0$pval <- (exp(2*model0$pval)-1)/(exp(2*model0$pval) + 1)
+      model0$b <- (exp(2*model0$b)-1)/(exp(2*model0$b) + 1)
+      model0$ci.lb <- (exp(2*model0$ci.lb)-1)/(exp(2*model0$ci.lb) + 1)
+      model0$ci.ub <- (exp(2*model0$ci.ub)-1)/(exp(2*model0$ci.ub) + 1)
+      model0$zval <- (exp(2*model0$zval)-1)/(exp(2*model0$zval) + 1)
+      model$var.z <- diag(model$vb)
+      model$var <- (exp(2*model$var.z)-1)/(exp(2*model$var.z) + 1)
+      model$se <- sqrt(model$var)
+      model$pval <- (exp(2*model$pval)-1)/(exp(2*model$pval) + 1)
+      model$b <- (exp(2*model$b)-1)/(exp(2*model$b) + 1)
+      model$ci.lb <- (exp(2*model$ci.lb)-1)/(exp(2*model$ci.lb) + 1)
+      model$ci.ub <- (exp(2*model$ci.ub)-1)/(exp(2*model$ci.ub) + 1)
+      model$zval <- (exp(2*model$zval)-1)/(exp(2*model$zval) + 1)
+    } 
+    model$out <- with(model, list(estimate=b, se=se, z=zval, ci.l=ci.lb,
+      ci.u=ci.ub,  "Pr(>|z|)"=pval, predictors=predictors))
+    model$out2 <- with(model, data.frame(QE, QEp, QM, QMp))
+    model$call <- call
+    model$tau2_empty <- model0$tau2
+    model$R2 <-  1-(model$tau2 / model$tau2_empty)
+    class(model) <- c("mareg", "rma.uni", "rma")
+    return(model)
+} 
+
+# function to print objects to Word
+wd <- function(object, get = FALSE, new = FALSE, ...) {
+  UseMethod("wd")
+}
+
+wd.default <- function(object, get = FALSE, new = FALSE, ...) {
+  require('R2wd', quietly = TRUE)
+  get <- get
+  open <- wdGet(get)	# If no word file is open, it will start a new one
+  if(new == TRUE){
+    new <- wdNewDoc("c:\\Temp.doc")
+  }
+  else{ 
+    new <- NULL
+  }  	
+  wd1 <- round(data.frame(estimate=object$b, se=object$se, z=object$zval,
+   ci.lower=object$ci.lb, ci.upper=object$ci.ub,  "p"=object$pval), 4)
+  title <- wdHeading(level = 2, " Model Results:")
+  wd2 <-  round(data.frame(QE=object$QE, QEp=object$QEp, QM=object$QM, QMP=object$QMp), 4)
+  obj1 <- wdTable(wd1, ...)
+  title2 <- wdHeading(level = 2, "Heterogeneity & Fit:")
+  obj2 <- wdTable(wd2, ...)
+  out <- (list(open, new, title, obj1, title2, obj2))
+  class(out) <- "wd"
+  return(out)
+}
+wd.mareg <- function(object, get = FALSE, new = FALSE, ...) {
+  require('R2wd', quietly = TRUE)
+  get <- get
+  open <- wdGet(get)	# If no word file is open, it will start a new one
+  if(new == TRUE){
+    new <- wdNewDoc("c:\\Temp.doc")
+  }
+  else{ 
+    new <- NULL
+  }  	
+  wd1 <- round(data.frame(estimate=object$b, se=object$se, z=object$zval,
+   ci.l=object$ci.lb, ci.u=object$ci.ub,  "p"=object$pval), 4)
+  title <- wdHeading(level = 2, " Model Results:")
+  wd2 <-  round(data.frame(Qw=object$QE, p.w=object$QEp, Qb=object$QM, p.w=object$QMp), 4)
+  obj1 <- wdTable(wd1)
+  title2 <- wdHeading(level = 2, "Heterogeneity & Fit:")
+  obj2 <- wdTable(wd2, ...)
+  out <- (list(open, new, title, obj1, title2, obj2))
+  class(out) <- "wd.mareg"
+  return(out)
+}
+
+wd.omni <- function(object, get = FALSE, new = FALSE, ...) {
+  require('R2wd', quietly = TRUE)
+  get <- get
+  open <- wdGet(get)	# If no word file is open, it will start a new one
+  if(new == TRUE){
+    new <- wdNewDoc("c:\\Temp.doc")
+  }
+  else{ 
+    new <- NULL
+  }  	
+    k <- object$k
+    estimate <- object$estimate
+    var <- object$var
+    se <- object$se
+    ci.l <- object$ci.l
+    ci.u <- object$ci.u 
+    z <- object$z
+    p <- object$p
+    Q <- object$Q
+    df.Q <- object$df.Q
+    p.h <- object$p.h
+    I2 <- object$I2
+    results1 <- round(data.frame(estimate, var, se, ci.l, ci.u, z, p),4)
+    #results <- formatC(table, format="f", digits=digits)
+    results1$k <- object$k
+    results1 <- results1[c(8,1:7)]
+    results2 <- round(data.frame(Q, df.Q, p.h),4)
+    results2$I2 <- object$I2
+    title <- wdHeading(level = 2, " Omnibus Model Results:")
+    obj1 <- wdTable(results1)
+    title2 <- wdHeading(level = 2, "Heterogeneity:")
+    obj2 <- wdTable(results2)
+    out <- (list(open, new, title, obj1, title2, obj2))
+    class(out) <- "wd.omni"
+    return(out)
+}
+
+wd.macat <- function(object, get = FALSE, new = FALSE, ...) {
+  require('R2wd', quietly = TRUE)
+  get <- get
+  open <- wdGet(get)	# If no word file is open, it will start a new one
+  if(new == TRUE){
+    new <- wdNewDoc("c:\\Temp.doc")
+  }
+  else{ 
+    new <- NULL
+  }  	
+    x1 <- object$Model
+    x2 <- object$Heterogeneity
+    mod <- x1$mod
+    k <- x1$k
+    estimate <- x1$estimate
+    var <- x1$var
+    se <- x1$se
+    ci.l <- x1$ci.l
+    ci.u <- x1$ci.u 
+    z <- x1$z
+    p <- x1$p
+    Q <- x1$Q
+    df <- x1$df
+    p.h <- x1$p.h
+    I2 <- x1$I2
+    Qoverall <- x2$Q
+    QE <- x2$Qw
+    QE.df <- x2$df.w
+    QEp <- x2$p.w
+    QM <- x2$Qb
+    QM.df <- x2$df.b
+    QMp <- x2$p.b
+    results1 <- round(data.frame(estimate, var, se, ci.l, ci.u, z, p,
+      Q, df, p.h),4)
+    #results <- formatC(table, format="f", digits=digits)
+    results1$k <- x1$k
+    results1$I2 <- x1$I2
+    results1$mod <- x1$mod
+    results1 <- results1[c(13,11, 1:10,12)]
+    results2 <- round(data.frame(Q=Qoverall, QE, QE.df, QEp, QM, QM.df, QMp),4)
+    results1[2:12] <-round(results1[2:12],3)
+    title <- wdHeading(level = 2, " Categorical Moderator Results:")
+    obj1 <- wdTable(results1)
+    title2 <- wdHeading(level = 2, "Heterogeneity:")
+    obj2 <- wdTable(results2)
+    out <- (list(open, new, title, obj1, title2, obj2))
+    class(out) <- "wd.macat"
+    return(out)
+}
+
+##============ WITHIN STUDY AGGREGATION OF EFFECT SIZES =============##
+
+# Automated within-study effect size aggregation function accounting for 
+# dependencies among effect sizes g (unbiased estimate of d).
+# Required inputs are n.1 (treatment sample size), n.2 (comparison sample size)
+# id (study id), g (unbiased effect size).
+
+aggrs <- function(r, cor = .50) {
+  # Intermediate level function to compute weighted aggregation of effect sizes 
+  k <- length(r)
+   rbar <- cor
+   r.xY <- sum(r)/(1 * sqrt(k  +  k*(k - 1) * rbar))
+   return(r.xY)
+}
+
+# automated agg 
+agg <- function(id, r, n, cor = .50, mod=NULL, data) {
+  call <- match.call()
+  mf <- match.call(expand.dots = FALSE)
+  args <- match(c("id", "r", "n", "mod", "cor", "data"),
+  names(mf), 0)
+  mf <- mf[c(1, args)]
+  #mf$drop.unused.levels <- TRUE
+  mf[[1]] <- as.name("model.frame")
+  mf.id <- mf[[match("id", names(mf))]]
+  id <- eval(mf.id, data, enclos = sys.frame(sys.parent()))
+  mf.r <- mf[[match("r", names(mf))]]
+  r <- eval(mf.r, data, enclos = sys.frame(sys.parent()))
+  mf.n <- mf[[match("n", names(mf))]]
+  n <- eval(mf.n, data, enclos = sys.frame(sys.parent()))
+  mf.mod <- mf[[match("mod", names(mf))]]
+  mod <- eval(mf.mod, data, enclos = sys.frame(sys.parent()))
+  if(is.null(mod)){
+
+    st <- unique(id)
+    out <- data.frame(id=st)
+    for(i in 1:length(st)) { 
+    out$id[i] <- st[i]
+    out$r[i] <- aggrs(r = r[id==st[i]], cor)
+    out$n[i] <- round(mean(n[id==st[i]]),0)
+    }
+  }
+  if(!is.null(mod)) {
+  #additional agg functions for mods, etc
+    st <- as.factor(id)
+    st <- unique(st)
+    um <- unique(mod)
+    out <- data.frame(id = rep(st, rep(length(um), length(st))))
+    out$mod <- rep(um, length(st))
+    for (i in 1:length(st)) {
+        for (j in 1:length(um)) {
+            ro <- (i - 1) * length(um) + j
+            m1 <- match(id, st[i], nomatch = 0)
+            m2 <- match(mod, um[j], nomatch = 0)
+            num <- sum(m1 * m2)
+            out$r[ro] <- ifelse(num == 0, NA, aggrs(r = r[id == 
+                st[i] & mod == um[j]], cor))
+            out$n[ro] <- round(mean(n[id == st[i] & mod == um[j]]), 
+                0)
+        }
+    }
+    out <- out[is.na(out$r) == 0, ]
+    } 
+  return(out)
+}  
+
+
+##=== Add Fixed and Random Effects Weights ===##
+# Required input is a data.frame with column names id (study id), 
+# g (unbiased standardized mean diff ES),  and n.1 (group 1 sample size),
+# n.2 (group 2 sample size).
+ 
+
+# required inputs are g, var.g and will output weights, ci, etc
+wgts <-  function(es, var.es, data) {  
+  call <- match.call()
+  mf <- match.call(expand.dots = FALSE)
+  args <- match(c("es", "var.es", "data"),
+  names(mf), 0)
+  mf <- mf[c(1, args)]
+  #mf$drop.unused.levels <- TRUE
+  mf[[1]] <- as.name("model.frame")
+  mf.es <- mf[[match("es", names(mf))]]
+  meta <- data
+  es <- eval(mf.es, data, enclos = sys.frame(sys.parent()))
+  mf.var.es <- mf[[match("var.es", names(mf))]]
+  var.es <- eval(mf.var.es, data, enclos = sys.frame(sys.parent()))
+  meta$l.ci95 <- es-1.96*sqrt(var.es)     #create random ci for each study
+  meta$u.ci95 <- es + 1.96*sqrt(var.es)
+  meta$z.score <- es/sqrt(var.es)
+  meta$wi <-  1/var.es  # computing weight for each study
+  meta$wiTi <- meta$wi*es  # used to calculate omnibus
+  meta$wiTi2 <- meta$wi*(es)^2  # used to calculate omnibus
+  # random effects #
+  sum.wi <- sum(meta$wi, na.rm=TRUE)  # used to calculate random effects
+  sum.wiTi <- sum(meta$wiTi, na.rm=TRUE)  # used to calculate random effects
+  sum.wiTi2 <- sum(meta$wiTi2, na.rm=TRUE)  # used to calculate random effects
+  Q <- sum.wiTi2-(sum.wiTi^2)/sum.wi  #used to calculate random effects            
+  k <- sum(!is.na(es))  # number of studies
+  df <- k-1  # degree of freedom
+  sum.wi2 <- sum(meta$wi^2, na.rm=TRUE)  # used to calculate random effects 
+  comp <- sum.wi-sum.wi2/sum.wi  # (pg. 271) used to calculate random effects	
+  meta$tau <- (Q-(k - 1))/comp  # Level 2 variance
+  meta$var.tau <- meta$tau + var.es  # Random effects variance (within study var + between var) 
+  meta$wi.tau <- 1/meta$var.tau  # Random effects weights
+  meta$wiTi.tau <- meta$wi.tau*es
+  meta$wiTi2.tau <- meta$wi.tau*(es)^2
+  return(meta)
+}
+
+
+##================= FIXED AND RANDOM EFFECTS OMNIBUS ===============##
+# Function to calculate fixed and random effects omnibus effect size for g,  
+# outputing omnibus effect size,  variance,  standard error,  upper and lower 
+# confidence intervals,  and heterogeneity test.
+# Required input is a data.frame with column names id (study id), 
+# g (unbiased standardized mean diff ES),  and n.1 (group 1 sample size),
+# n.2 (group 2 sample size).
+
+omni <-  function(es, var, data, type="weighted", method = "random", ztor = FALSE) {
+  # Computes fixed and random effects omnibus effect size for correlations.  
+  # Args:
+  #   es:    vector of r or z' effect sizes
+  #   var:  vector of variances of r or z'.
+  #   data: data.frame where r (or z') and var for each study are located.
+  #   type:  "weighted" or "unweighted". "weighted" is the default. Use the 
+  #   unweighted variance method only if Q is rejected and is very large relative to k.   
+  # Returns:
+  #   Fixed or random (Restricted Maximal Likelihood) effects omnibus effect size, variance, standard error, 
+  #   upper and lower confidence intervals, p-value, Q (heterogeneity test), I2
+  #   (I-squared--proportion of total variation in tmt effects due to heterogeneity 
+  #   rather than chance). 
+  call <- match.call()
+  mf <- match.call(expand.dots = FALSE)
+  args <- match(c("es", "var", "data", "type", "method"),
+    names(mf), 0)
+  mf <- mf[c(1, args)]
+  mf$drop.unused.levels <- TRUE
+  mf[[1]] <- as.name("model.frame")
+  mf.es <- mf[[match("es", names(mf))]]
+  es <- eval(mf.es, data, enclos = sys.frame(sys.parent()))
+  mf.var.es <- mf[[match("var", names(mf))]]
+  var.es <- eval(mf.var.es, data, enclos = sys.frame(sys.parent()))
+  l.ci95 <- es-1.96*sqrt(var.es)     #create random ci for each study
+  u.ci95 <- es + 1.96*sqrt(var.es)
+  z.score <- es/sqrt(var.es)
+  wi <-  1/var.es  # computing weight for each study
+  wiTi <- wi*es  # used to calculate omnibus
+  wiTi2 <- wi*(es)^2  # used to calculate omnibus
+  # random effects #
+  sum.wi <- sum(wi, na.rm=TRUE)  # used to calculate random effects
+  sum.wiTi <- sum(wiTi, na.rm=TRUE)  # used to calculate random effects
+  sum.wiTi2 <- sum(wiTi2, na.rm=TRUE)  # used to calculate random effects
+  Q <- sum.wiTi2-(sum.wiTi^2)/sum.wi  #used to calculate random effects            
+  k <- sum(!is.na(es))  # number of studies
+  df <- k-1  # degree of freedom
+  sum.wi2 <- sum(wi^2, na.rm=TRUE)  # used to calculate random effects 
+  comp <- sum.wi-sum.wi2/sum.wi  # (pg. 271) used to calculate random effects	
+  tau <- (Q-(k - 1))/comp  # Level 2 variance
+  var.tau <- tau + var.es  # Random effects variance (within study var + between var) 
+  wi.tau <- 1/var.tau  # Random effects weights
+  wiTi.tau <- wi.tau*es
+  wiTi2.tau <- wi.tau*(es)^2
+  k <- length(!is.na(es)) # number of studies
+  df <- k-1 
+  sum.wi <- sum(wi, na.rm=TRUE)  # used to calculate omnibus
+  sum.wiTi <- sum(wiTi, na.rm=TRUE)  # used to calculate omnibus
+  sum.wiTi2 <- sum(wiTi2, na.rm=TRUE)  # used to calculate omnibus
+  T.agg <- sum.wiTi/sum.wi  # omnibus g 
+  var.T.agg <- 1/sum.wi  # omnibus var.g
+  se.T.agg <- sqrt(var.T.agg) 
+  z.value  <-  T.agg/se.T.agg
+  p.value <-  2*pnorm(abs(z.value), lower.tail=FALSE)
+  lower.ci <- T.agg-1.96*se.T.agg
+  upper.ci <- T.agg + 1.96*se.T.agg
+  Q <- sum.wiTi2-(sum.wiTi^2)/sum.wi  # FE homogeneity test
+  I2 <- (Q-(k-1))/Q  # I-squared 
+  I2 <- ifelse(I2<0, 0, I2)        
+  I2 <- paste(round(I2*100, 4),  "%",  sep="")                        
+  p.homog <- pchisq(Q, df, lower=FALSE)  # <.05 = sig. heterogeneity  
+  # random effects #
+  sum.wi2 <- sum(wi^2, na.rm=TRUE)
+  comp <- sum.wi-sum.wi2/sum.wi
+  sum.wi.tau <- sum(wi.tau, na.rm=TRUE)
+  sum.wiTi.tau <- sum(wiTi.tau, na.rm=TRUE)
+  sum.wiTi2.tau <- sum(wiTi2.tau, na.rm=TRUE)
+  T.agg.tau <- sum.wiTi.tau/sum.wi.tau
+  if(type == "weighted") {
+    var.T.agg.tau <-  1/sum.wi.tau 
+    se.T.agg.tau <- sqrt(var.T.agg.tau)
+    z.valueR  <-  T.agg.tau/se.T.agg.tau
+    p.valueR <-  2*pnorm(abs(z.valueR), lower.tail=FALSE)
+    lower.ci.tau <- T.agg.tau-1.96*se.T.agg.tau
+    upper.ci.tau <- T.agg.tau + 1.96*se.T.agg.tau
+  }
+  if(type == "unweighted") {  # unweighted variance method
+    var.agg <- (sum(g^2)-sum(g)^2/k)/(k-1) #14.20
+    #q.num <- (1/k)*sum(var.g)                                   
+    unwgtvar.T.agg.tau <- var.agg-(1/k)*sum(var.g)  #14.22
+    var.T.agg.tau <-  ifelse(unwgtvar.T.agg.tau <= 0, 0, unwgtvar.T.agg.tau)  #if var < 0,  its set to 0
+    se.T.agg.tau <- sqrt(var.T.agg.tau)
+    z.valueR  <-  T.agg.tau/se.T.agg.tau
+    p.valueR <-  2*pnorm(abs(z.valueR), lower.tail=FALSE)
+    lower.ci.tau <- T.agg.tau-1.96*se.T.agg.tau
+    upper.ci.tau <- T.agg.tau + 1.96*se.T.agg.tau
+  } 
+  if(ztor == TRUE) {
+      # fixed effects:
+      var.T.agg <- (exp(2*var.T.agg)-1)/(exp(2*var.T.agg) + 1)
+      se.T.agg <- sqrt(var.T.agg)
+      p.value <- (exp(2*p.value)-1)/(exp(2*p.value) + 1)
+      T.agg <- (exp(2*T.agg)-1)/(exp(2*T.agg) + 1)
+      lower.ci <- (exp(2*lower.ci)-1)/(exp(2*lower.ci) + 1)
+      upper.ci <- (exp(2*upper.ci)-1)/(exp(2*upper.ci) + 1)
+      z.value <- (exp(2*z.value)-1)/(exp(2*z.value) + 1)
+      # random effects:
+      var.T.agg.tau <- (exp(2*var.T.agg.tau)-1)/(exp(2*var.T.agg.tau) + 1)
+      se.T.agg.tau <- sqrt(var.T.agg.tau)
+      p.valueR <- (exp(2*p.valueR)-1)/(exp(2*p.valueR) + 1)
+      T.agg.tau <- (exp(2*T.agg.tau)-1)/(exp(2*T.agg.tau) + 1)
+      lower.ci.tau <- (exp(2*lower.ci.tau)-1)/(exp(2*lower.ci.tau) + 1)
+      upper.ci.tau <- (exp(2*upper.ci.tau)-1)/(exp(2*upper.ci.tau) + 1)
+      z.valueR <- (exp(2*z.valueR)-1)/(exp(2*z.valueR) + 1)
+
+    } 
+
+  Fixed <- list(k=k, estimate=T.agg,  var=var.T.agg,  se=se.T.agg, 
+                ci.l=lower.ci,  ci.u=upper.ci,  z=z.value,  p=p.value,
+                Q=Q, df.Q=df, Qp=p.homog, I2=I2, call=call)
+  Random <- list(k=k, estimate=T.agg.tau, var=var.T.agg.tau,  
+                 se=se.T.agg.tau,  ci.l=lower.ci.tau, ci.u=upper.ci.tau, 
+                 z=z.valueR, p=p.valueR, Q=Q, df.Q=df,  Qp=p.homog, 
+                 I2=I2, call=call)
+  if(method == "fixed") {
+    omni.data <- Fixed
+    row.names(omni.data) <- NULL
+} 
+  if(method == "random") {
+    omni.data <- Random
+    row.names(omni.data) <- NULL
+}  
+  class(omni.data) <-"omni"
+  return(omni.data)
+}
+
+print.omni <- function (x, digits = 4, ...){
+    k <- x$k
+    estimate <- x$estimate
+    var <- x$var
+    se <- x$se
+    ci.l <- x$ci.l
+    ci.u <- x$ci.u 
+    z <- x$z
+    p <- x$p
+    Q <- x$Q
+    df.Q <- x$df.Q
+    Qp <- x$Qp
+    I2 <- x$I2
+    results1 <- round(data.frame(estimate, var, se,ci.l, ci.u, z, p),4)
+    #results <- formatC(table, format="f", digits=digits)
+    results1$k <- x$k
+    results1 <- results1[c(8,1:7)]
+    results2 <- round(data.frame(Q, df.Q, Qp),4)
+    results2$I2 <- x$I2
+    cat("\n Note: 
+       If using r and the variance of r as input, be sure to 
+       leave the default ztor = FALSE, otherwise the output will be
+       inaccurate. If using z' (Fisher's z) and the variance of z'
+       as the input, changing ztor = TRUE will convert z' back to r 
+       (for interpretive purposes) after all analyses have been 
+       conducted.", "", "\n","----","\n")
+    cat("\n Model Results:", "", "\n", "\n")
+    print(results1)
+    cat("\n Heterogeneity:", "", "\n","\n")
+    print(results2)
+    invisible(x)
+}
+
+
+
+##================= Categorical Moderator Analysis ================##
+
+macat <- function (es, var, mod, data, method= "random", ztor = FALSE) {
+    # Computes single predictor categorical moderator analysis. Computations
+    # derived from chapter 15, Cooper et al. (2009). 
+    # Args:
+    #   meta: data.frame with g (standardized mean diff),var.g (variance of g)
+    #   mod: Categorical moderator variable used for moderator analysis.    
+    # Returns:
+    #   Fixed or random effects moderator means per group, k per group, 
+    #   95% confidence intervals, z-value, p-value, variances, 
+    #   standard errors, Q, df(Q), and I-squared.
+    #   Also outputs Q-statistic, Q-within & between, df(Qw & Qb), and 
+    #   homogeneity p-value within & between levels.
+    call <- match.call()
+    mf <- match.call(expand.dots = FALSE)
+    args <- match(c("es", "var","mod", "data","method"),
+    names(mf), 0)
+    mf <- mf[c(1, args)]
+    mf$drop.unused.levels <- TRUE
+    mf[[1]] <- as.name("model.frame")
+    mf.es <- mf[[match("es", names(mf))]]
+    meta <- data
+    meta$es <- eval(mf.es, data, enclos = sys.frame(sys.parent()))
+    mf.var.es <- mf[[match("var", names(mf))]]
+    meta$var.es <- eval(mf.var.es, data, enclos = sys.frame(sys.parent()))
+    mf.mod <- mf[[match("mod", names(mf))]]
+    meta$mod <- eval(mf.mod, data, enclos = sys.frame(sys.parent()))
+    meta$mod <- as.character(meta$mod)
+      meta$k <- 1
+      meta$TW <- 1/meta$var.es
+      meta$TWD <- meta$TW * meta$es
+      meta$TWDS <- meta$TWD * meta$es
+      temp <- aggregate(meta[c("k", "TW", "TWD", "TWDS")], by = meta["mod"], 
+          FUN = sum)
+      temp$mod <- as.character(temp$mod)
+      lastrows <- dim(temp)[1] + 1
+      temp[lastrows, 2:5] <- apply(temp[, -1], 2, FUN = sum)
+      temp$mod[lastrows] <- "Overall"
+      temp$es <- temp$TWD/temp$TW
+      temp$var.es <- 1/temp$TW
+      temp$se.es <- sqrt(temp$var.es)
+      temp$Q <- temp$TWDS - temp$TWD^2/temp$TW
+      temp$df <- temp$k - 1
+      temp$z.value <- temp$es/temp$se.es
+      temp$p.value <- 2 * pnorm(abs(temp$z.value), lower.tail = FALSE)
+      temp$p_homog <- ifelse(temp$df == 0, 1, pchisq(temp$Q, temp$df, 
+          lower = FALSE))
+      temp$I2 <- (temp$Q - (temp$df))/temp$Q
+      temp$I2 <- ifelse(temp$I2 < 0, 0, temp$I2)
+      temp$I2 <- paste(round(temp$I2 * 100, 0), "%", sep = "")
+      # fixed effect homogeneity (used in RE for Q, Qw, df.w, p.w)
+      kf <- temp$k[temp$mod == "Overall"]
+      levelsf <- length(temp$mod) - 1
+      Qb.dff <- levelsf - 1
+      Qw.dff <- kf - levelsf
+      Qsf <- temp$Q[temp$mod == "Overall"]
+      Qwf <- sum(temp$Q[!temp$mod == "Overall"])
+      Qw_p.valuef <- 1 - pchisq(Qwf, Qw.dff)
+    if(method == "fixed") {
+      out <- aggregate(meta[c("k", "TW", "TWD", "TWDS")], by = meta["mod"], 
+          FUN = sum)
+      out$mod <- as.character(out$mod)
+      lastrow <- dim(out)[1] + 1
+      out[lastrow, 2:5] <- apply(out[, -1], 2, FUN = sum)
+      out$mod[lastrow] <- "Overall"
+      out$es <- out$TWD/out$TW
+      out$var.es <- 1/out$TW
+      out$se.es <- sqrt(out$var.es)
+      out$Q <- out$TWDS - out$TWD^2/out$TW
+      out$df <- out$k - 1
+      out$z.value <- out$es/out$se.es
+      out$p.value <- 2 * pnorm(abs(out$z.value), lower.tail = FALSE)
+      out$L.95ci <- out$es - 1.96 * out$se.es
+      out$U.95ci <- out$es + 1.96 * out$se.es
+      out$p_homog <- ifelse(out$df == 0, 1, pchisq(out$Q, out$df, 
+          lower = FALSE))
+      out$I2 <- (out$Q - (out$df))/out$Q
+      out$I2 <- ifelse(out$I2 < 0, 0, out$I2)
+      out$I2 <- paste(round(out$I2 * 100, 0), "%", sep = "")
+      out$TW <- NULL
+      out$TWD <- NULL
+      out$TWDS <- NULL      
+      k <- out$k[out$mod == "Overall"]
+      levels <- length(out$mod) - 1
+      Qb.df <- levels - 1
+      Qw.df <- k - levels
+      Qs <- out$Q[out$mod == "Overall"]
+      Qw <- sum(out$Q[!out$mod == "Overall"])
+      Qw_p.value <- 1 - pchisq(Qw, Qw.df)
+      Qb <- Qs - Qw
+      Qb_p.value <- 1 - pchisq(Qb, Qb.df)
+      mod.Qstat <- data.frame(Qs, Qw, Qw.df, Qw_p.value, Qb, Qb.df, 
+        Qb_p.value)
+      names(mod.Qstat) <- c("Q", "Qw", "df.w", "p.w", "Qb", "df.b", 
+        "p.b")
+    }
+    if(method=="random") {
+      meta$TWS <- meta$TW^2
+      out <- aggregate(meta[c("k", "TW", "TWS", "TWD", "TWDS")], 
+          by = meta["mod"], FUN = sum)
+      out$Q <- out$TWDS - out$TWD^2/out$TW
+      Q <- sum(out$Q)
+      out$df <- out$k - 1
+      df <- sum(out$df)
+      out$c <- out$TW - (out$TWS/out$TW)
+      c <- sum(out$c)
+      TSw <- (Q - df)/c
+      tau <- ifelse(TSw < 0, 0, TSw)
+      meta$var.tau <- meta$var.es + tau
+      meta$TW.tau <- 1/meta$var.tau
+      meta$TWD.tau <- meta$TW.tau * meta$es
+      meta$TWDS.tau <- meta$TWD.tau * meta$es
+      out <- aggregate(meta[c("k", "TW.tau", "TWD.tau", "TWDS.tau")], 
+          by = meta["mod"], FUN = sum)
+      lastrow <- dim(out)[1] + 1
+      out[lastrow, 2:5] <- apply(out[, -1], 2, FUN = sum)
+      out$mod[lastrow] <- "Overall"
+      out$es <- out$TWD.tau/out$TW.tau
+      out$var.es <- 1/out$TW.tau
+      out$es <- out$TWD.tau/out$TW.tau
+      out$se.es <- sqrt(out$var.es)
+      out$Q <-  out$TWDS.tau - out$TWD.tau^2/out$TW.tau
+      out$df <- out$k - 1
+      out$z.value <- out$es/out$se.es
+      out$p.value <- 2 * pnorm(abs(out$z.value), lower.tail = FALSE)
+      out$L.95ci <- out$es - 1.96 * out$se.es
+      out$U.95ci <- out$es + 1.96 * out$se.es
+      out$p_homog <-  ifelse(out$df == 0, 1, pchisq(out$Q, out$df, 
+        lower = FALSE))
+      out$I2 <- temp$I2
+      out$TW.tau <- NULL
+      out$TWD.tau <- NULL
+      out$TWDS.tau <- NULL 
+      k <- out$k[out$mod == "Overall"]
+      levels <- length(out$mod) - 1
+      Qb.df <- levels - 1
+      Qw.df <- k - levels
+      Q <- out$Q[out$mod == "Overall"]
+      Qw <- sum(out$Q[!out$mod == "Overall"])
+      Qw_p.value <- 1 - pchisq(Qw, Qw.df)
+      Qb <- Q - Qw
+      Qb_p.value <- 1 - pchisq(Qb, Qb.df)
+      Qs <- temp$Q[temp$mod == "Overall"]
+      Qw <- sum(temp$Q[!temp$mod == "Overall"])
+      Qw_p.value <- Qw_p.valuef
+      mod.Qstat <- data.frame(Qs, Qw, Qw.df, Qw_p.value, Qb, Qb.df, 
+        Qb_p.value)
+      names(mod.Qstat) <- c("Q", "Qw", "df.w", "p.w", "Qb", "df.b", 
+        "p.b")
+      out$Q <- temp$Q
+      out$df <- temp$df
+      out$p_homog <- temp$p_homog 
+    }
+    colnames(out) <- c("mod", "k", "estimate", "var", "se", "Q", 
+          "df", "z", "p", "ci.l", "ci.u", "p.h", "I2")
+    out1 <- out[, c(1, 2, 3, 5, 4, 10, 11, 8, 9, 6, 7, 12, 13)]
+    if(ztor == TRUE) {
+      out1$estimate <- (exp(2*out$estimate)-1)/(exp(2*out$estimate) + 1)
+      out1$var <- (exp(2*out$var)-1)/(exp(2*out$var) + 1)
+      out1$se <- sqrt(out$var)
+      out1$z <- (exp(2*out$z)-1)/(exp(2*out$z) + 1)
+      out1$p <- (exp(2*out$p)-1)/(exp(2*out$p) + 1)
+      out1$ci.l <- (exp(2*out$ci.l)-1)/(exp(2*out$ci.l) + 1)
+      out1$ci.u <- (exp(2*out$ci.u)-1)/(exp(2*out$ci.u) + 1)
+    } 
+    out2 <- mod.Qstat
+    out <- list(Model=out1, Heterogeneity=out2)
+    class(out) <- "macat"
+    return(out)
+}
+
+print.macat <- function (x, digits = 4, ...){
+    x1 <- x$Model
+    x2 <- x$Heterogeneity
+    mod <- x1$mod
+    k <- x1$k
+    estimate <- x1$estimate
+    var <- x1$var
+    se <- x1$se
+    ci.l <- x1$ci.l
+    ci.u <- x1$ci.u 
+    z <- x1$z
+    p <- x1$p
+    Q <- x1$Q
+    df <- x1$df
+    p.h <- x1$p.h
+    I2 <- x1$I2
+    Qoverall <- x2$Q
+    QE <- x2$Qw
+    QE.df <- x2$df.w
+    QEp <- x2$p.w
+    QM <- x2$Qb
+    QM.df <- x2$df.b
+    QMp <- x2$p.b
+    results1 <- round(data.frame(estimate, var, se, ci.l, ci.u, z, p,
+      Q, df, p.h),4)
+    #results <- formatC(table, format="f", digits=digits)
+    results1$k <- x1$k
+    results1$I2 <- x1$I2
+    results1$mod <- x1$mod
+    results1 <- results1[c(13,11, 1:10,12)]
+    results2 <- round(data.frame(Q=Qoverall, QE, QE.df, QEp, QM, QM.df, QMp),4)
+    cat("\n Note: 
+       If using r and the variance of r as input, be sure to 
+       leave the default ztor = FALSE, otherwise the output will be
+       inaccurate. If using z' (Fisher's z) and the variance of z'
+       as the input, changing ztor = TRUE will convert z' back to r 
+       (for interpretive purposes) after all analyses have been 
+       conducted.", "", "\n","----","\n")
+    cat("\n Model Results:", "", "\n", "\n")
+    print(results1)
+    cat("\n Heterogeneity:", "", "\n","\n")
+    print(results2)
+    invisible(x)
+}
+
+
+      
+# Function for planned comparisons between 2 levels of moderator (fixed effects)
+
+macatC <- function(x1, x2, es, var, mod, data,  method= "random", type= "post.hoc",
+          ztor = FALSE) {
+  # Directly compares 2 levels of a categorical moderator using a fixed effects model. 
+  # Computations derived from chapter 15, Cooper et al. (2009). 
+  # Args:
+  #   meta: data.frame with g (standardized mean diff),var.g (variance of g),
+  #         n.1 (grp 1 sample size), n.2 (grp 2 sample size).
+  #   mod: Categorical moderator variable used for moderator analysis.    
+  #   x1: One level of categorical moderator
+  #   x2: Other level (comparison group) of same categorical moderator
+  #   method: "post.hoc" assumes the comparision was not planned prior to conducting
+  #           the meta-analysis. The other option "planned" assumes you have planned 
+  #           a priori to compare these levels of the categorical moderator. 
+  #           Default is "post.hoc1". 
+  # Returns:
+  #   Random effects moderator means per group, mean difference (d), variance of difference,
+  #   p-value, and 95% confidence intervals. 
+  call <- match.call()
+  mf <- match.call(expand.dots = FALSE)
+  args <- match(c("x1", "x.2", "es", "var", "mod", "data"),
+  names(mf), 0)
+  mf <- mf[c(1, args)]
+  mf$drop.unused.levels <- TRUE
+  mf[[1]] <- as.name("model.frame")
+  mf.es <- mf[[match("es", names(mf))]]
+  es <- eval(mf.es, data, enclos = sys.frame(sys.parent()))
+  mf.var <- mf[[match("var", names(mf))]]
+  var.es <- eval(mf.var, data, enclos = sys.frame(sys.parent()))
+  mf.mod <- mf[[match("mod", names(mf))]]
+  mod <- eval(mf.mod, data, enclos = sys.frame(sys.parent()))
+  modsig <- macat(es=es, var=var.es, mod=mod, data=data, method=method)
+  modsig$mod <- as.factor(modsig$Model$mod)
+  com1 <- levels(modsig$mod)[x1]  # first level of moderator
+  com2 <- levels(modsig$mod)[x2]  # second level of moderator
+  x1.es <- modsig$Model[modsig$mod==com1, "estimate"]
+  x2.es <- modsig$Model[modsig$mod==com2, "estimate"]
+  x1.var <- modsig$Model[modsig$mod==com1, "var"]
+  x2.var <- modsig$Model[modsig$mod==com2, "var"]
+  es <- (-1)*x1.es + 1*x2.es  # pg 288 (Cooper et al.,  2009)
+  var <- (-1)^2*x1.var + (1)^2*x2.var
+  df <- 2-1
+  chi.sqr <- es^2/var
+  #m <- meta 
+  #m$mod <- mod
+  #compl<-!is.na(m$mod)
+  #meta<-m[compl,]
+  #if(type == "post.hoc1") {  # post-hoc comparison (Tukey HSD method)
+  #  fit<-aov(es~mod,weights=meta$wi)
+  #  fit<-TukeyHSD(fit)
+  #}
+  if(type == "post.hoc") {  # post-hoc comparison (Scheffe method)
+    z <- es/sqrt(var)
+    z2 <- z^2
+    levels <- length(levels(as.factor(mod)))
+    df.post <- levels-1 
+    p.value <- 1-pchisq(z2, df.post)
+    L.95ci <- es-1.96*sqrt(var)
+    U.95ci <- es + 1.96*sqrt(var)
+    fit <- data.frame(es, var, p.value) # , L.95ci, U.95ci)
+    names(fit) <- c("diff", "var.diff",  
+                    "p") #, "CI.lower", "CI.lower" )
+  }
+  if (type == "planned") {  # planned comparison (a priori)
+   df <- 2-1
+   chi.sqr <- es^2/var
+   p.value <- 1-pchisq(chi.sqr, df)
+   L.95ci <- es-1.96*sqrt(var)
+   U.95ci <- es + 1.96*sqrt(var)
+   fit <- data.frame(es, var, p.value) # , L.95ci, U.95ci)
+   names(fit) <- c("diff", "var.diff",  
+                   "p") #, "ci.l", "ci.u" )
+  }
+  if(ztor == TRUE) {
+      fit$diff <- (exp(2*fit$diff)-1)/(exp(2*fit$diff) + 1)
+      fit$var.diff <- (exp(2*fit$var.diff)-1)/(exp(2*fit$var.diff) + 1)
+      fit$p <- (exp(2*fit$p)-1)/(exp(2*fit$p) + 1)
+      #fit$ci.l <- (exp(2*fit$ci.l)-1)/(exp(2*fit$ci.l) + 1)
+      #fit$ci.u <- (exp(2*fit$ci.u)-1)/(exp(2*fit$ci.u) + 1)
+    } 
+  return(fit) 
+}
+
+# multifactor cat mod analysis [IN PROGRESS]:
+#add relevant columns and it will works fine!
+#MFCatMod <- function(meta, mod1, mod2) {
+#  m <- Wifun(meta)
+#  m$mod1 <- mod1
+#  m$mod2 <- mod2
+#  fixed <- ddply(m, c("mod1", "mod2"), summarise, sum.wi = sum(wi),
+#           sum.wiTi = sum(wiTi), sum.wiTi2 = sum(wiTi2))
+#  fixed$ES <- fixed$sum.wiTi/fixed$sum.wi
+#  random <- ddply(m, c("mod1", "mod2"), summarise, sum.wi.tau = sum(wi.tau),
+#           sum.wiTi.tau = sum(wiTi.tau), sum.wiTi2.tau = sum(wiTi2.tau))
+#  random$ES <- random$sum.wiTi.tau/random$sum.wi.tau
+#  out <- list(Fixed = fixed, Random = random)
+#  return(out)
+#}
+
+
+##============= GRAPHICS =============##
+
+# requires ggplot2
+
+##=== Meta-regression scatterplot with weighted regression line ===##
+
+plotcon <- function(es, var, mod, data, method= "random", modname=NULL, 
+  title=NULL, ylim=c(0, 1), ...) {
+  # Outputs a scatterplot from a fixed or random effects meta-regression (continuous and/or
+  # categorical). Computations derived from chapter 14 and 15, Cooper et al. (2009). 
+  # Args:
+  #   data: data.frame with es (r or z'),var (variance),
+  #         n.1 (grp 1 sample size), n.2 (grp 2 sample size).
+  #   mod: Moderator variable used for meta-regression.    
+  #   method: Model used, either "random" or "fixed" effects. Default is "random".
+  #   modname: Name of moderator to appear on x-axis of plot. Default is NULL.
+  #   title: Plot title. Default is NULL.
+  #   ylim: Limits of y-axis with the first argrument minimal value and second maximum value.
+  #         Default is c(0,1).
+  # Returns:
+  #   Scatterplot with fixed or random effects regression line and where size of points are 
+  #   based on study weights--more precise studies are larger. The ggplot2 package outputs the 
+  #   rich graphics. 
+  require('ggplot2')
+  call <- match.call()
+  mf <- match.call(expand.dots = FALSE)
+  args <- match(c("es", "var","mod", "data","method"),
+  names(mf), 0)
+  mf <- mf[c(1, args)]
+  mf$drop.unused.levels <- TRUE
+  mf[[1]] <- as.name("model.frame")
+  mf.es <- mf[[match("es", names(mf))]]
+  m <- data
+  m$es <- eval(mf.es, data, enclos = sys.frame(sys.parent()))
+  mf.var.es <- mf[[match("var", names(mf))]]
+  m$var.es <- eval(mf.var.es, data, enclos = sys.frame(sys.parent()))
+  mf.mod <- mf[[match("mod", names(mf))]]
+  m$mod <- eval(mf.mod, data, enclos = sys.frame(sys.parent()))
+  m$mod <- as.character(m$mod)
+  compl<-!is.na(m$mod)
+  meta<-m[compl,]
+  meta$wi <-  1/meta$var.es
+  meta$wi2 <- (1/meta$var.es)^2
+  meta$wiTi <- meta$wi*meta$es
+  meta$wiTi2 <- meta$wi*(meta$es)^2
+  sum.wi <- sum(meta$wi, na.rm=TRUE)    
+  sum.wi2 <- sum(meta$wi2, na.rm=TRUE)
+  sum.wiTi <- sum(meta$wiTi, na.rm=TRUE)    
+  sum.wiTi2 <- sum(meta$wiTi2, na.rm=TRUE)
+  comp <- sum.wi-sum.wi2/sum.wi
+  Q <- sum.wiTi2-(sum.wiTi^2)/sum.wi                         
+  k <- sum(!is.na(meta$es))                                  
+  df <- k-1      
+  tau <- (Q-(k - 1))/comp 				
+  meta$var.tau <- meta$var.es + tau
+  meta$wi.tau <- 1/meta$var.tau
+  meta$wiTi.tau <- meta$wi.tau*meta$es
+  meta$wiTi2.tau <- meta$wi.tau*(meta$es)^2
+  if(method=="fixed") {
+    congraph <- ggplot(meta,  aes(mod, es, weight=wi), na.rm=TRUE, ...) + 
+    geom_point(aes(size=wi), alpha=.6, na.rm=TRUE) + 
+    geom_smooth(aes(group=1), method = lm,  se = FALSE) + 
+    xlab(modname) + ylab("Effect Size") +  
+    ylim(ylim) +  
+    opts(title=title, legend.position = "none")
+  }
+  if(method=="random") {
+    congraph <- ggplot(meta,  aes(mod, es, weight=wi.tau), na.rm=TRUE) + 
+    geom_point(aes(size=wi.tau), alpha=.6, na.rm=TRUE) + 
+    geom_smooth(aes(group=1, weight=wi.tau), method = lm, se = FALSE,  na.rm=TRUE) + 
+    xlab(modname) + 
+    ylab("Effect Size")  + 
+    #ylim(min(meta$z), 1) +  
+    opts(title=title, legend.position = "none")
+  }
+  return(congraph)
+}
+
+##=== Categorical Moderator Graph ===##
+
+# Intermediate level function to add mean to boxplot
+
+stat_sum_single1  <-  function(fun,  geom="point",  weight=wi, ...) {
+                               stat_summary(fun.y=fun,  shape=" + ",
+                               geom=geom,  size = 5,  ...)      
+}
+stat_sum_single2  <-  function(fun,  geom="point",  weight=wi.tau, ...) {
+                               stat_summary(fun.y=fun,  shape=" + ",  
+                               geom=geom,  size = 5,  ...)      
+}
+
+plotcat <- function(es, var, mod, data,  method="random",  modname=NULL,  title=NULL, ...) {
+  # Outputs a boxplot from a fixed or random effects moderator analysis.
+  # Computations derived from chapter 14 and 15, Cooper et al. (2009). 
+  # Args:
+  #   meta: data.frame with es (r or z'),var.es (variance of es),
+  #         n.1 (grp 1 sample size), n.2 (grp 2 sample size).
+  #   mod: Categorical moderator variable used for analysis.    
+  #   method: Model used, either "random" or "fixed" effects. Default is "random".
+  #   modname: Name of moderator to appear on x-axis of plot. Default is NULL.
+  #   title: Plot title. Default is NULL.
+  # Returns:
+  #   Boxplot graph with median, interquartile range, max, min, and 
+  #   outliers from a fixed or random effects categorical moderator analysis. Places
+  #   jitter points for each study and the size of points are based on study weights--more 
+  #   precise studies are larger. The ggplot2 package outputs the 
+  #   rich graphics. 
+  require('ggplot2')
+  call <- match.call()
+  mf <- match.call(expand.dots = FALSE)
+  args <- match(c("es", "var","mod", "data","method"),
+  names(mf), 0)
+  mf <- mf[c(1, args)]
+  mf$drop.unused.levels <- TRUE
+  mf[[1]] <- as.name("model.frame")
+  mf.es <- mf[[match("es", names(mf))]]
+  m <- data
+  m$es <- eval(mf.es, data, enclos = sys.frame(sys.parent()))
+  mf.var.es <- mf[[match("var", names(mf))]]
+  m$var.es <- eval(mf.var.es, data, enclos = sys.frame(sys.parent()))
+  mf.mod <- mf[[match("mod", names(mf))]]
+  m$mod <- eval(mf.mod, data, enclos = sys.frame(sys.parent()))
+  m$mod <- as.character(m$mod)
+  compl<-!is.na(m$mod)
+  meta<-m[compl,]
+  meta$wi <-  1/meta$var.es
+  meta$wi2 <- (1/meta$var.es)^2
+  meta$wiTi <- meta$wi*meta$es
+  meta$wiTi2 <- meta$wi*(meta$es)^2
+  sum.wi <- sum(meta$wi, na.rm=TRUE)    
+  sum.wi2 <- sum(meta$wi2, na.rm=TRUE)
+  sum.wiTi <- sum(meta$wiTi, na.rm=TRUE)    
+  sum.wiTi2 <- sum(meta$wiTi2, na.rm=TRUE)
+  comp <- sum.wi-sum.wi2/sum.wi
+  Q <- sum.wiTi2-(sum.wiTi^2)/sum.wi                         
+  k <- sum(!is.na(meta$es))                                  
+  df <- k-1      
+  tau <- (Q-(k - 1))/comp 				
+  meta$var.tau <- meta$var.es + tau
+  meta$wi.tau <- 1/meta$var.tau
+  meta$wiTi.tau <- meta$wi.tau*meta$es
+  meta$wiTi2.tau <- meta$wi.tau*(meta$es)^2
+  if(method=="fixed") {
+    catmod <- ggplot(meta,  aes(factor(mod), es,weight = wi), na.rm=TRUE) + 
+                    geom_boxplot(aes(weight = wi), outlier.size=2,na.rm=TRUE) + 
+                    geom_jitter(aes(shape=factor(mod), size=wi.tau), alpha=.25) + 
+                    #theme_bw() + 
+                    xlab(modname) + 
+                    ylab("Effect Size")  + 
+                    opts(title=title, legend.position="none", na.rm=TRUE) #+ 
+                    #stat_sum_single2(mean)
+  }  
+  if(method=="random") {
+    catmod <- ggplot(meta,  aes(factor(mod), es,  weight=wi.tau), na.rm=TRUE) + 
+                    geom_boxplot(outlier.size=2, aes(weight=wi.tau),na.rm=TRUE) + 
+                    geom_jitter(aes(shape=factor(mod), size=wi.tau), alpha=.25) + 
+                    #theme_bw() + 
+                    xlab(modname) + 
+                    ylab("Effect Size")  + 
+                    opts(title=title, legend.position="none", na.rm=TRUE) # + 
+                    #stat_sum_single2(mean)
+  }
+  return(catmod)
+}
+
+##===================== PUBLICATION BIAS ===================##
+# Three approaches to assess for publication bias: (1) Fail
+# Safe N, (2) Trim & Fill, and (3) Selection Modeling.
+
+# Fail Safe N provides an estimate of the number of missing studies that 
+# would need to exist to overturn the current conclusions.
+
+PubBias <- function(data) {  # requires a data.frame having been analyzed by 'weights' 
+  meta <- data               # function
+  k <- length(meta$z.score)
+  sum.z <- sum(meta$z.score)
+  Z <- sum.z/sqrt(k)
+  k0 <- round(-k + sum.z^2/(1.96)^2, 0)
+  k.per <- round(k0/k, 0)
+  out <- list("Fail.safe"=cbind(k,Z,k0, k.per))
+  return(out)
+}
+
+##================== INTERRATER RELIABILITY ================##
+
+# Kappa coefficients for inter-rater reliability (categorical variables)
+# Imputs required are rater1 (first rater on Xi categorical variable)
+# and rater2 (second rater on same Xi categorical variable)
+
+Kappa <- function(rater1, rater2)  {
+  # Computes Kappa coefficients for inter-rater reliability (categorical variables).
+  # Args:
+  #   rater1: First rater of categorical variable to be analyzed.
+  #   rater2: Second rater on same categorical variable to be analyzed.
+  # Returns:
+  #   Kappa coefficients for inter-rater reliability (categorical variables).
+  freq <- table(rater1, rater2)  # frequency table
+  marg <- margin.table(freq) # total observations 
+  marg2 <- margin.table(freq, 1)  # A frequencies (summed over rater2) 
+  marg1 <- margin.table(freq, 2)  # B frequencies (summed over rater1)
+  cellper <- prop.table(freq)  # cell percentages
+  rowper <- margin.table(freq, 2)/margin.table(freq)  # row percentages 
+  colper <- margin.table(freq, 1)/margin.table(freq)  # column percentages
+  expected  <-  as.array(rowper) %*% t(as.array(colper)) 
+  p.e <- sum(diag(expected))
+  p.a_p.e <- sum(diag(cellper))- p.e
+  p.e1 <- 1-p.e
+  kappa <- p.a_p.e/p.e1
+  names(kappa) <- "Kappa"
+  #cat("\n")
+  #cat("strong agreement:    kappa > .75", "", "\n")
+  #cat("moderate agreement:  .40 > kappa < .75", "", "\n")
+  #cat("weak agreement:      kappa < .40", "", "\n","\n")
+  return(kappa)
+}
+
+# icc (created by Matthias Gamer for the 'irr' package)
+icc <- function (ratings, model = c("oneway", "twoway"), type = c("consistency", 
+    "agreement"), unit = c("single", "average"), r0 = 0, conf.level = 0.95) 
+{
+    ratings <- as.matrix(na.omit(ratings))
+    model <- match.arg(model)
+    type <- match.arg(type)
+    unit <- match.arg(unit)
+    alpha <- 1 - conf.level
+    ns <- nrow(ratings)
+    nr <- ncol(ratings)
+    SStotal <- var(as.numeric(ratings)) * (ns * nr - 1)
+    MSr <- var(apply(ratings, 1, mean)) * nr
+    MSw <- sum(apply(ratings, 1, var)/ns)
+    MSc <- var(apply(ratings, 2, mean)) * ns
+    MSe <- (SStotal - MSr * (ns - 1) - MSc * (nr - 1))/((ns - 
+        1) * (nr - 1))
+    if (unit == "single") {
+        if (model == "oneway") {
+            icc.name <- "ICC(1)"
+            coeff <- (MSr - MSw)/(MSr + (nr - 1) * MSw)
+            Fvalue <- MSr/MSw * ((1 - r0)/(1 + (nr - 1) * r0))
+            df1 <- ns - 1
+            df2 <- ns * (nr - 1)
+            p.value <- pf(Fvalue, df1, df2, lower.tail = FALSE)
+            FL <- (MSr/MSw)/qf(1 - alpha/2, ns - 1, ns * (nr - 
+                1))
+            FU <- (MSr/MSw) * qf(1 - alpha/2, ns * (nr - 1), 
+                ns - 1)
+            lbound <- (FL - 1)/(FL + (nr - 1))
+            ubound <- (FU - 1)/(FU + (nr - 1))
+        }
+        else if (model == "twoway") {
+            if (type == "consistency") {
+                icc.name <- "ICC(C,1)"
+                coeff <- (MSr - MSe)/(MSr + (nr - 1) * MSe)
+                Fvalue <- MSr/MSe * ((1 - r0)/(1 + (nr - 1) * 
+                  r0))
+                df1 <- ns - 1
+                df2 <- (ns - 1) * (nr - 1)
+                p.value <- pf(Fvalue, df1, df2, lower.tail = FALSE)
+                FL <- (MSr/MSe)/qf(1 - alpha/2, ns - 1, (ns - 
+                  1) * (nr - 1))
+                FU <- (MSr/MSe) * qf(1 - alpha/2, (ns - 1) * 
+                  (nr - 1), ns - 1)
+                lbound <- (FL - 1)/(FL + (nr - 1))
+                ubound <- (FU - 1)/(FU + (nr - 1))
+            }
+            else if (type == "agreement") {
+                icc.name <- "ICC(A,1)"
+                coeff <- (MSr - MSe)/(MSr + (nr - 1) * MSe + 
+                  (nr/ns) * (MSc - MSe))
+                a <- (nr * r0)/(ns * (1 - r0))
+                b <- 1 + (nr * r0 * (ns - 1))/(ns * (1 - r0))
+                Fvalue <- MSr/(a * MSc + b * MSe)
+                a <- (nr * coeff)/(ns * (1 - coeff))
+                b <- 1 + (nr * coeff * (ns - 1))/(ns * (1 - coeff))
+                v <- (a * MSc + b * MSe)^2/((a * MSc)^2/(nr - 
+                  1) + (b * MSe)^2/((ns - 1) * (nr - 1)))
+                df1 <- ns - 1
+                df2 <- v
+                p.value <- pf(Fvalue, df1, df2, lower.tail = FALSE)
+                FL <- qf(1 - alpha/2, ns - 1, v)
+                FU <- qf(1 - alpha/2, v, ns - 1)
+                lbound <- (ns * (MSr - FL * MSe))/(FL * (nr * 
+                  MSc + (nr * ns - nr - ns) * MSe) + ns * MSr)
+                ubound <- (ns * (FU * MSr - MSe))/(nr * MSc + 
+                  (nr * ns - nr - ns) * MSe + ns * FU * MSr)
+            }
+        }
+    }
+    else if (unit == "average") {
+        if (model == "oneway") {
+            icc.name <- paste("ICC(", nr, ")", sep = "")
+            coeff <- (MSr - MSw)/MSr
+            Fvalue <- MSr/MSw * (1 - r0)
+            df1 <- ns - 1
+            df2 <- ns * (nr - 1)
+            p.value <- pf(Fvalue, df1, df2, lower.tail = FALSE)
+            FL <- (MSr/MSw)/qf(1 - alpha/2, ns - 1, ns * (nr - 
+                1))
+            FU <- (MSr/MSw) * qf(1 - alpha/2, ns * (nr - 1), 
+                ns - 1)
+            lbound <- 1 - 1/FL
+            ubound <- 1 - 1/FU
+        }
+        else if (model == "twoway") {
+            if (type == "consistency") {
+                icc.name <- paste("ICC(C,", nr, ")", sep = "")
+                coeff <- (MSr - MSe)/MSr
+                Fvalue <- MSr/MSe * (1 - r0)
+                df1 <- ns - 1
+                df2 <- (ns - 1) * (nr - 1)
+                p.value <- pf(Fvalue, df1, df2, lower.tail = FALSE)
+                FL <- (MSr/MSe)/qf(1 - alpha/2, ns - 1, (ns - 
+                  1) * (nr - 1))
+                FU <- (MSr/MSe) * qf(1 - alpha/2, (ns - 1) * 
+                  (nr - 1), ns - 1)
+                lbound <- 1 - 1/FL
+                ubound <- 1 - 1/FU
+            }
+            else if (type == "agreement") {
+                icc.name <- paste("ICC(A,", nr, ")", sep = "")
+                coeff <- (MSr - MSe)/(MSr + (MSc - MSe)/ns)
+                a <- r0/(ns * (1 - r0))
+                b <- 1 + (r0 * (ns - 1))/(ns * (1 - r0))
+                Fvalue <- MSr/(a * MSc + b * MSe)
+                a <- (nr * coeff)/(ns * (1 - coeff))
+                b <- 1 + (nr * coeff * (ns - 1))/(ns * (1 - coeff))
+                v <- (a * MSc + b * MSe)^2/((a * MSc)^2/(nr - 
+                  1) + (b * MSe)^2/((ns - 1) * (nr - 1)))
+                df1 <- ns - 1
+                df2 <- v
+                p.value <- pf(Fvalue, df1, df2, lower.tail = FALSE)
+                FL <- qf(1 - alpha/2, ns - 1, v)
+                FU <- qf(1 - alpha/2, v, ns - 1)
+                lbound <- (ns * (MSr - FL * MSe))/(FL * (MSc - 
+                  MSe) + ns * MSr)
+                ubound <- (ns * (FU * MSr - MSe))/(MSc - MSe + 
+                  ns * FU * MSr)
+            }
+        }
+    }
+    rval <- structure(list(subjects = ns, raters = nr, model = model, 
+        type = type, unit = unit, icc.name = icc.name, value = coeff, 
+        r0 = r0, Fvalue = Fvalue, df1 = df1, df2 = df2, p.value = p.value, 
+        conf.level = conf.level, lbound = lbound, ubound = ubound), 
+        class = "icclist")
+    return(rval)
+}
+
+
+
+# Correction for Attenuation
+
+atten <- function (es, xx, yy, data) {
+    call <- match.call()
+    mf <- match.call(expand.dots = FALSE)
+    args <- match(c("es", "xx", "yy", "data"),
+    names(mf), 0)
+    mf <- mf[c(1, args)]
+    mf$drop.unused.levels <- TRUE
+    mf[[1]] <- as.name("model.frame")
+    meta <- data 
+    mf.es <- mf[[match("es", names(mf))]]
+    es <- eval(mf.es, data, enclos = sys.frame(sys.parent()))
+    mf.xx <- mf[[match("xx", names(mf))]]
+    xx <- eval(mf.xx, data, enclos = sys.frame(sys.parent()))
+    mf.yy <- mf[[match("yy", names(mf))]]
+    yy <- eval(mf.yy, data, enclos = sys.frame(sys.parent()))
+    meta$es.corrected <-  es/(sqrt(xx)*sqrt(yy))
+    return(meta)
+}
+
+
+
+
+
+
+
+
+##---------------- old functions -------------------
 # 3.18.10  internal for GUI: convert to factor
 
 facts <- function(meta, mod) {
@@ -275,23 +1510,23 @@ lor_to_d <- function(lor, var.lor) {
 
 # compute or from proportions
 
-prop_to_or <- function(p1, p2, n.ab, n.cd) {
-  or <-(p1*(1-p2))/(p2*(1-p1))
-  lor <- log(or)
-  var.lor <- 1/(n.ab*p1*(1-p1))+1/(n.cd*p2*(1-p2))
-  out <- cbind(or,lor,var.lor)
-  return(out)
-}
+#prop_to_or <- function(p1, p2, n.ab, n.cd) {
+#  or <-(p1*(1-p2))/(p2*(1-p1))
+#  lor <- log(or)
+#  var.lor <- 1/(n.ab*p1*(1-p1))+1/(n.cd*p2*(1-p2))
+#  out <- cbind(or,lor,var.lor)
+#  return(out)
+#}
 
-prop_to_d <-function(p1, p2, n.ab, n.cd) {
-  or <-(p1*(1-p2))/(p2*(1-p1))
-  lor <- log(or)
-  var.lor <- 1/(n.ab*p1*(1-p1))+1/(n.cd*p2*(1-p2))
-  d <- lor*sqrt(3)/pi
-  var.d <- 3*var.lor/pi^2
-  out <- cbind(or,lor,var.lor, d, var.d)
-  return(out)
-}
+#prop_to_d <-function(p1, p2, n.ab, n.cd) {
+#  or <-(p1*(1-p2))/(p2*(1-p1))
+#  lor <- log(or)
+#  var.lor <- 1/(n.ab*p1*(1-p1))+1/(n.cd*p2*(1-p2))
+#  d <- lor*sqrt(3)/pi
+#  var.d <- 3*var.lor/pi^2
+#  out <- cbind(or,lor,var.lor, d, var.d)
+#  return(out)
+#}
 
 # Odds Ratio to d: if have info for 'failure' in both conditions 
 # (B = # tmt failure; D = # non-tmt failure) and the sample size
@@ -395,7 +1630,7 @@ agg_r <- function(meta, cor = .50) {
   return(out)
 }  
 
-# used to randomly select one level of mod if study reports multi levels
+
 
  agg_r2<-function (meta, mod, cor = 0.5){
     id <- meta$id
@@ -1445,24 +2680,6 @@ MultiModGraph <- function(meta, conmod,  catmod, method="random",
   return(multimod)
 }
 
-##===================== PUBLICATION BIAS ===================##
-# Three approaches to assess for publication bias: (1) Fail
-# Safe N, (2) Trim & Fill, and (3) Selection Modeling.
-
-# Fail Safe N provides an estimate of the number of missing studies that 
-# would need to exist to overturn the current conclusions.
-
-PubBias <- function(meta, method = "fail.safe") {
-  if(method == "fail.safe") {
-    k <- length(meta$z.score)
-    sum.z <- sum(meta$z.score)
-    Z <- sum.z/sqrt(k)
-    k0 <- round(-k + sum.z^2/(1.96)^2, 0)
-    n.miss.per <- round(k0/k, 0)
-  }
-  out <- list("Fail.safe"=cbind(k,Z,k0, k.per))
-  return(out)
-}
 
 ##===================== PUBLICATION BIAS ===================##
 # Three approaches to assess for publication bias: (1) Fail
@@ -1471,9 +2688,9 @@ PubBias <- function(meta, method = "fail.safe") {
 # Fail Safe N provides an estimate of the number of missing studies that 
 # would need to exist to overturn the current conclusions.
 
-PubBias <- function(meta) {
-  k <- length(meta$z.score)
-  sum.z <- sum(meta$z.score)
+PubBias <- function(data) {
+  k <- length(data$z.score)
+  sum.z <- sum(data$z.score)
   Z <- sum.z/sqrt(k)
   k0 <- round(-k + sum.z^2/(1.96)^2, 0)
   k.per <- round(k0/k, 0)
@@ -1481,36 +2698,8 @@ PubBias <- function(meta) {
   return(out)
 }
 
-##================== INTERRATER RELIABILITY ================##
 
-# Kappa coefficients for inter-rater reliability (categorical variables)
-# Imputs required are rater1 (first rater on Xi categorical variable)
-# and rater2 (second rater on same Xi categorical variable)
 
-Kappa <- function(rater1, rater2)  {
-  # Computes Kappa coefficients for inter-rater reliability (categorical variables).
-  # Args:
-  #   rater1: First rater of categorical variable to be analyzed.
-  #   rater2: Second rater on same categorical variable to be analyzed.
-  # Returns:
-  #   Kappa coefficients for inter-rater reliability (categorical variables).
-  freq <- table(rater1, rater2)  # frequency table
-  marg <- margin.table(freq) # total observations 
-  marg2 <- margin.table(freq, 1)  # A frequencies (summed over rater2) 
-  marg1 <- margin.table(freq, 2)  # B frequencies (summed over rater1)
-  cellper <- prop.table(freq)  # cell percentages
-  rowper <- margin.table(freq, 2)/margin.table(freq)  # row percentages 
-  colper <- margin.table(freq, 1)/margin.table(freq)  # column percentages
-  expected  <-  as.array(rowper) %*% t(as.array(colper)) 
-  p.e <- sum(diag(expected))
-  p.a_p.e <- sum(diag(cellper))- p.e
-  p.e1 <- 1-p.e
-  kappa <- p.a_p.e/p.e1
-  return(kappa)
-}
-
-#Interclass correlations (ICC) for computing reliabilities for continuous variables
-# Requires Psych package?
 
 ##====== Additional Functions ========##
 
