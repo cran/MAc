@@ -64,7 +64,7 @@ dat
 
 # Example
 macatC(1, 2, es=r, var=var.r, mod=mods2, data=dat,  method= "random", 
-type= "post.hoc", ztor = FALSE) 
+  type= "post.hoc", ztor = FALSE) 
 
 
 }

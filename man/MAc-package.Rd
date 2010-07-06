@@ -10,8 +10,8 @@
 \tabular{ll}{
 Package: \tab MAc\cr
 Type: \tab Package\cr
-Version: \tab 1.0.8-2\cr
-Date: \tab 2010-07-03\cr
+Version: \tab 1.1\cr
+Date: \tab 2010-07-06\cr
 License: \tab GPL-2\cr
 LazyLoad: \tab yes\cr
 }
@@ -70,6 +70,15 @@ dat$var.z <- var_z(dat$n)  # MAc function for variance of z'
 dat$mods2 <- factor(rep(1:2, 10))
 dat
 
+# Note: for all the examples in this manual, we have made up data and manually 
+# created variables and datasets. If conducting your own meta-analysis, 
+# a more convenient way for using the functions is to import your data from
+# a .csv file (with relevant variables in the dataset). One way to do this:
+# dat <- read.csv(file.choose(), header = TRUE)
+#
+# Then, you can run the functions with this dataset and you do not need to 
+# manually create your dataset, as we have done above.
+  
   
 
 # 1. Computations to Calculate Correlations:

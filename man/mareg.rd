@@ -39,6 +39,18 @@ mareg(formula, var, data, ztor = FALSE, method = "REML",  subset,  ...)
 }
 \item{Pr(>|z|)}{ p-value (significance level).
 }
+\item{QE}{ Q-error. Measure of error in the model.
+}
+\item{QE.df}{ Degrees of freedom for Q-error.
+}
+\item{QEp}{ Q-error p-value (for homogeneity).
+}
+\item{QM}{ Q-model. Measure of model fit.
+}
+\item{QM.df}{ Degrees of freedom for Q-model.
+}
+\item{QMp}{ Q-between p-value (for homogeneity). QM and QMp provide the test of whether the moderator variable(s) account for significant variance among effect sizes.
+} 
 }
 \references{Wolfgang Viechtbauer (2010). metafor: Meta-Analysis Package for
   R. R package version 1.1-0. http://CRAN.R-project.org/package=metafor

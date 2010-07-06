@@ -172,10 +172,13 @@ wd.mareg <- function(object, get = FALSE, new = FALSE, ...) {
   else{ 
     new <- NULL
   }  	
+  QE.df <- round(object$k - object$p, 0)
+  QM.df <- round(object$m, 0)
   wd1 <- round(data.frame(estimate=object$b, se=object$se, z=object$zval,
    ci.l=object$ci.lb, ci.u=object$ci.ub,  "p"=object$pval), 4)
   title <- wdHeading(level = 2, " Model Results:")
-  wd2 <-  round(data.frame(Qw=object$QE, p.w=object$QEp, Qb=object$QM, p.w=object$QMp), 4)
+  wd2 <-  round(data.frame(QE=object$QE, QE.df = QE.df,
+            QEp=object$QEp, QM=object$QM, QM.df=QM.df, QMp=object$QMp), 4)
   obj1 <- wdTable(wd1)
   title2 <- wdHeading(level = 2, "Heterogeneity & Fit:")
   obj2 <- wdTable(wd2, ...)
@@ -203,14 +206,14 @@ wd.omni <- function(object, get = FALSE, new = FALSE, ...) {
     z <- object$z
     p <- object$p
     Q <- object$Q
-    df.Q <- object$df.Q
-    p.h <- object$p.h
+    Q.df <- object$df.Q
+    Qp <- object$Qp
     I2 <- object$I2
     results1 <- round(data.frame(estimate, var, se, ci.l, ci.u, z, p),4)
     #results <- formatC(table, format="f", digits=digits)
     results1$k <- object$k
     results1 <- results1[c(8,1:7)]
-    results2 <- round(data.frame(Q, df.Q, p.h),4)
+    results2 <- round(data.frame(Q, Q.df, Qp),4)
     results2$I2 <- object$I2
     title <- wdHeading(level = 2, " Omnibus Model Results:")
     obj1 <- wdTable(results1)
@@ -247,12 +250,12 @@ wd.macat <- function(object, get = FALSE, new = FALSE, ...) {
     p.h <- x1$p.h
     I2 <- x1$I2
     Qoverall <- x2$Q
-    QE <- x2$Qw
-    QE.df <- x2$df.w
-    QEp <- x2$p.w
-    QM <- x2$Qb
-    QM.df <- x2$df.b
-    QMp <- x2$p.b
+    Qw <- x2$Qw
+    Qw.df <- x2$df.w
+    Qw.p <- x2$p.w
+    Qb <- x2$Qb
+    Qb.df <- x2$df.b
+    Qb.p <- x2$p.b
     results1 <- round(data.frame(estimate, var, se, ci.l, ci.u, z, p,
       Q, df, p.h),4)
     #results <- formatC(table, format="f", digits=digits)
@@ -260,7 +263,7 @@ wd.macat <- function(object, get = FALSE, new = FALSE, ...) {
     results1$I2 <- x1$I2
     results1$mod <- x1$mod
     results1 <- results1[c(13,11, 1:10,12)]
-    results2 <- round(data.frame(Q=Qoverall, QE, QE.df, QEp, QM, QM.df, QMp),4)
+    results2 <- round(data.frame(Q=Qoverall, Qw, Qw.df, Qw.p, Qb, Qb.df, Qb.p),4)
     results1[2:12] <-round(results1[2:12],3)
     title <- wdHeading(level = 2, " Categorical Moderator Results:")
     obj1 <- wdTable(results1)
@@ -740,12 +743,12 @@ print.macat <- function (x, digits = 4, ...){
     p.h <- x1$p.h
     I2 <- x1$I2
     Qoverall <- x2$Q
-    QE <- x2$Qw
-    QE.df <- x2$df.w
-    QEp <- x2$p.w
-    QM <- x2$Qb
-    QM.df <- x2$df.b
-    QMp <- x2$p.b
+    Qw <- x2$Qw
+    Qw.df <- x2$df.w
+    Qw.p <- x2$p.w
+    Qb <- x2$Qb
+    Qb.df <- x2$df.b
+    Qb.p <- x2$p.b
     results1 <- round(data.frame(estimate, var, se, ci.l, ci.u, z, p,
       Q, df, p.h),4)
     #results <- formatC(table, format="f", digits=digits)
@@ -753,7 +756,7 @@ print.macat <- function (x, digits = 4, ...){
     results1$I2 <- x1$I2
     results1$mod <- x1$mod
     results1 <- results1[c(13,11, 1:10,12)]
-    results2 <- round(data.frame(Q=Qoverall, QE, QE.df, QEp, QM, QM.df, QMp),4)
+    results2 <- round(data.frame(Q=Qoverall, Qw, Qw.df, Qw.p, Qb, Qb.df, Qb.p),4)
     cat("\n Note: 
        If using r and the variance of r as input, be sure to 
        leave the default ztor = FALSE, otherwise the output will be
@@ -1218,6 +1221,29 @@ icc <- function (ratings, model = c("oneway", "twoway"), type = c("consistency",
     return(rval)
 }
 
+print.icclist <- function (x, ...) 
+{
+    icc.title <- ifelse(x$unit == "single", "Single Score Intraclass Correlation", 
+        "Average Score Intraclass Correlation")
+    cat(paste(" ", icc.title, "\n\n", sep = ""))
+    cat(paste("   Model:", x$model, "\n"))
+    cat(paste("   Type :", x$type, "\n\n"))
+    cat(paste("   Subjects =", x$subjects, "\n"))
+    cat(paste("     Raters =", x$raters, "\n"))
+    results <- paste(formatC(x$icc.name, width = 11, flag = "+"), 
+        "=", format(x$value, digits = 3))
+    cat(results)
+    cat("\n\n F-Test, H0: r0 =", x$r0, "; H1: r0 >", x$r0, "\n")
+    Ftest <- paste(formatC(paste("F(", x$df1, ",", format(x$df2, 
+        digits = 3), ")", sep = ""), width = 11, flag = "+"), 
+        "=", format(x$Fvalue, digits = 3), ", p =", format(x$p.value, 
+            digits = 3), "\n\n")
+    cat(Ftest)
+    cat(" ", round(x$conf.level * 100, digits = 1), "%-Confidence Interval for ICC Population Values:\n", 
+        sep = "")
+    cat(paste("  ", round(x$lbound, digits = 3), " < ICC < ", 
+        round(x$ubound, digits = 3), "\n", sep = ""))
+}
 
 
 # Correction for Attenuation

@@ -51,19 +51,19 @@ macat(es, var, mod, data, method= "random", ztor = FALSE)
 }
 \item{I2}{ Proportion of total variation in effect size that is due to heterogeneity rather than chance (see Shadish & Haddock, 2009; pp. 263).
 }
-\item{Q}{ Q-statistic overall.
+\item{Q}{ Q-statistic overall. Note: Whether fixed or random effects analyses are conducted, the Q statistic reported is for the fixed effect model. Therefore, Qb + Qw != Q in the random effects output.
 } 
-\item{QE}{ Q-within (or error). Measure of within-group heterogeneity).
+\item{Qw}{ Q-within (or error). Measure of within-group heterogeneity.
 }
-\item{QE.df}{ Degrees of freedom for Q-within.
+\item{Qw.df}{ Degrees of freedom for Q-within.
 }
-\item{QEp}{ Q-within p-value (for homogeneity).
+\item{Qw.p}{ Q-within p-value (for homogeneity).
 }
-\item{QM}{ Q-between (or model). Measure of model fit.
+\item{Qb}{ Q-between (or model). Measure of model fit.
 }
-\item{QM.df}{ Degrees of freedom for Q-between.
+\item{Qb.df}{ Degrees of freedom for Q-between.
 }
-\item{QMp}{ Q-between p-value (for homogeneity)
+\item{Qb.p}{ Q-between p-value (for homogeneity). Qb and Qb.p provide the test of whether the moderator variable(s) account for significant variance among effect sizes.
 } 
 }
 \references{Konstantopoulos & Hedges (2009). Analyzing effect sizes: Fixed-effects models. In H. Cooper, L. V. Hedges, & J. C. Valentine (Eds.), \emph{The handbook of research synthesis and meta analysis} (pp. 279-293). New York: Russell Sage Foundation.  
