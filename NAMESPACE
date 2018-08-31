@@ -3,3 +3,21 @@
 
 # Export all names
 exportPattern(".")
+
+S3method(mareg, default)
+S3method(print, icclist)
+S3method(print, macat)
+S3method(print, mareg)
+S3method(print, omni)
+S3method(print, summary.mareg)
+S3method(r2, mareg)
+S3method(summary, mareg)
+S3method(wd, default)
+S3method(wd, macat)
+S3method(wd, mareg)
+S3method(wd, omni)
+
+importFrom("stats", "TukeyHSD", "aggregate", "anova", "aov",
+           "contrasts", "lm", "model.extract", "model.matrix",
+           "model.response", "na.omit", "pchisq", "pf", "pnorm",
+           "printCoefmat", "qf", "qt", "var")

@@ -20,7 +20,7 @@ The \code{MAc} package has integrated functions to facilitate the meta-analytic 
 1. Computations to Calculate Correlations: 
 
 There are a variety of functions to compute r (correlation coefficients) from various designs reported in the primary studies. Most functions were derived from Borenstein's chapter (pp. 231-234) in \emph{The Handbook of Research Synthesis and Meta-Analysis} (Cooper, Hedges, & Valentine, 2009).
- For additional conversion formulas see the \bold{compute.es} package:  \url{http://CRAN.R-project.org/package=compute.es}
+ For additional conversion formulas see the \bold{compute.es} package:  \url{https://CRAN.R-project.org/package=compute.es}
 
 
 2. Within-Study Aggregation of Effect Sizes:
@@ -137,13 +137,13 @@ temp <- mareg(z~ mod1 + mods2, var = var.z, method = "REML", ztor = TRUE, data =
 #  wd(temp, get = TRUE, new = TRUE)
 }
 \seealso{
-\bold{RcmdrPlugin.MAc} package:  \url{http://CRAN.R-project.org/package=RcmdrPlugin.MAd};
+\bold{RcmdrPlugin.MAc} package:  \url{https://CRAN.R-project.org/package=RcmdrPlugin.MAd};
 
-\bold{MAd} package:  \url{http://CRAN.R-project.org/package=MAc};
+\bold{MAd} package:  \url{https://CRAN.R-project.org/package=MAc};
 
-\bold{RcmdrPlugin.MAd} package:  \url{http://CRAN.R-project.org/package=RcmdrPlugin.MAc};
+\bold{RcmdrPlugin.MAd} package:  \url{https://CRAN.R-project.org/package=RcmdrPlugin.MAc};
 
-\bold{compute.es} package:  \url{http://CRAN.R-project.org/package=compute.es};
+\bold{compute.es} package:  \url{https://CRAN.R-project.org/package=compute.es};
 
-\bold{metafor} package:  \url{http://CRAN.R-project.org/package=metafor}
+\bold{metafor} package:  \url{https://CRAN.R-project.org/package=metafor}
 }

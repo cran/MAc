@@ -2,7 +2,7 @@
 \alias{mareg}
 \title{ Meta-Regression 
 }
-\description{ Meta-regression function for a single or multiple predictor model. This function is a wrapper for the \code{rma()} function in the metafor package (Viechtbauer, W, 2010). Please see http://CRAN.R-project.org/package=metafor for details or for more advanced functionality with the \code{rma()} function. 
+\description{ Meta-regression function for a single or multiple predictor model. This function is a wrapper for the \code{rma()} function in the metafor package (Viechtbauer, W, 2010). Please see https://CRAN.R-project.org/package=metafor for details or for more advanced functionality with the \code{rma()} function. 
 }
 \usage{
 mareg(formula, var, data, ztor = FALSE, method = "REML",  subset,  ...)
@@ -24,7 +24,7 @@ mareg(formula, var, data, ztor = FALSE, method = "REML",  subset,  ...)
   }  
 }
 \details{See Wolfgang Viechtbauer (2010). metafor: Meta-Analysis Package for
-  R. R package version 1.1-0. for the details  of the \code{rma()}  function. http://CRAN.R-project.org/package=metafor
+  R. R package version 1.1-0. for the details  of the \code{rma()}  function. https://CRAN.R-project.org/package=metafor
 }
 \value{
 \item{estimate}{ Unstandardized regression coefficient estimate.
@@ -53,7 +53,7 @@ mareg(formula, var, data, ztor = FALSE, method = "REML",  subset,  ...)
 } 
 }
 \references{Wolfgang Viechtbauer (2010). metafor: Meta-Analysis Package for
-  R. R package version 1.1-0. http://CRAN.R-project.org/package=metafor
+  R. R package version 1.1-0. https://CRAN.R-project.org/package=metafor
 }
 \seealso{
 \code{\link{wd}},
